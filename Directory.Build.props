@@ -1,0 +1,30 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Repo-wide paths -->
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+    <ModelsDir>$(RepoRoot)models\</ModelsDir>
+
+    <!-- Rhino 8 on Windows runs .NET 7. Matched to Core and StructuralForm so
+         the three assemblies load into one process without a shim.
+
+         The clustering half of this repo is pure numerics and touches no Rhino
+         API at all, which is why its tests run on a hosted CI runner where
+         StructuralForm's cannot. `-windows` here follows Core, not a need. -->
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <RhinoVersion>8.0.23304.9001</RhinoVersion>
+
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>true</ImplicitUsings>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+
+    <Version>0.1.0</Version>
+    <Authors>OtterLogic</Authors>
+    <Company>OtterLogic</Company>
+
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <NoWarn>$(NoWarn);NETSDK1138;NU1701;CA1416</NoWarn>
+  </PropertyGroup>
+
+</Project>

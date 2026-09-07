@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>OtterLogic.MachineLearning</RootNamespace>
+    <AssemblyName>OtterLogic.MachineLearning</AssemblyName>
+    <!-- A layer, not a domain: it sits above Core and below the toolkits, and a
+         toolkit may reference it. No UI, no Grasshopper, and no dependency on
+         any toolkit. See docs/architecture.md. -->
+
+    <IsPackable>true</IsPackable>
+    <PackageId>OtterLogic.MachineLearning</PackageId>
+    <Description>Clustering, dataset capture and ONNX inference for the OtterLogic Rhino tools.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Otter-Logic/MachineLearning</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Otter-Logic/MachineLearning</RepositoryUrl>
+    <PackageTags>rhino;rhino3d;grasshopper;computational-design;machine-learning</PackageTags>
+
+  </PropertyGroup>
+
+  <!-- Deliberately no package references. The clustering pipeline is a Jacobi
+       eigendecomposition and an EM loop over six columns; MathNet would be
+       carried for a 6x6 symmetric eigensolve that is sixty lines. Revisit when
+       ONNX inference lands, which does need Microsoft.ML.OnnxRuntime. -->
+
+  <!-- A sibling checkout of Core wins; the published package is the fallback. -->
+  <Choose>
+    <When Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\Core\src\OtterLogic.Core\OtterLogic.Core.csproj')">
+      <ItemGroup>
+        <ProjectReference Include="..\..\..\Core\src\OtterLogic.Core\OtterLogic.Core.csproj" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="OtterLogic.Core" Version="[$(Version)]" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+
+</Project>

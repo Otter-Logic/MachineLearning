@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+*.user
+
+# Development-only virtual environment. Nothing in it ships.
+python/.venv/
+__pycache__/
+*.pyc

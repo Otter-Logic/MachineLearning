@@ -1,0 +1,16 @@
+# Development only. Nothing here ships, and no user of the plug-in installs
+# Python: the clustering pipeline is C# end to end. scikit-learn is here purely
+# as a reference implementation to test that C# against, and numpy/pandas for
+# generating and inspecting fixture data.
+#
+# Once GraphSAGE lands, torch joins this list and the one artefact that crosses
+# into the plug-in is a .onnx file dropped into /models.
+
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.5
+
+# Uncomment when graph work starts.
+# torch>=2.3
+# onnx>=1.16
+# onnxruntime>=1.18
