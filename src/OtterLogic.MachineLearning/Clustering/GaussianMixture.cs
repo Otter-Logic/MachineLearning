@@ -28,6 +28,12 @@ public static class GaussianMixture
     private const double Log2Pi = 1.8378770664093454835606594728112;
 
     /// <summary>
+    /// Lloyd iterations allowed when seeding. Only ever a starting point for EM,
+    /// so it does not need to run to convergence.
+    /// </summary>
+    private const int KMeansIterations = 100;
+
+    /// <summary>
     /// Fits a mixture, restarting from several random initialisations and
     /// keeping whichever reached the highest log-likelihood.
     /// </summary>
@@ -164,13 +170,20 @@ public static class GaussianMixture
     /// existing seed avoids the common failure where two seeds land in the same
     /// dense group and a real group is left with none.
     /// </para>
+    /// <para>
+    /// The seeding and the Lloyd loop live in <see cref="Clustering.KMeans"/>,
+    /// which is the same code a caller gets when they fit a k-means directly.
+    /// Keeping one copy is what stops the seeder drifting away from the parity
+    /// fixtures this class is measured against.
+    /// </para>
     /// </summary>
     private static Model InitialiseByKMeans(double[,] x, GaussianMixtureOptions options, Random rng)
     {
         int n = x.GetLength(0);
         int k = options.Components;
 
-        var labels = KMeans(x, k, rng);
+        var centres = Clustering.KMeans.PlusPlusSeeds(x, k, rng);
+        var (labels, _, _) = Clustering.KMeans.Lloyd(x, centres, k, KMeansIterations);
 
         var responsibilities = new double[n, k];
         for (int i = 0; i < n; i++)
@@ -179,226 +192,6 @@ public static class GaussianMixture
         var model = Model.Empty(options.Covariance, k, x.GetLength(1));
         model.MStep(x, responsibilities, options.RegularisationFloor);
         return model;
-    }
-
-    private static int[] KMeans(double[,] x, int k, Random rng, int maxIterations = 100)
-    {
-        int n = x.GetLength(0);
-        int d = x.GetLength(1);
-
-        var centres = KMeansPlusPlusSeeds(x, k, rng);
-        var labels = new int[n];
-
-        for (int iteration = 0; iteration < maxIterations; iteration++)
-        {
-            bool moved = false;
-
-            for (int i = 0; i < n; i++)
-            {
-                int best = 0;
-                double bestDistance = double.MaxValue;
-
-                for (int c = 0; c < k; c++)
-                {
-                    double distance = 0.0;
-                    for (int j = 0; j < d; j++)
-                    {
-                        double delta = x[i, j] - centres[c, j];
-                        distance += delta * delta;
-                    }
-
-                    if (distance < bestDistance)
-                    {
-                        bestDistance = distance;
-                        best = c;
-                    }
-                }
-
-                if (labels[i] != best)
-                {
-                    labels[i] = best;
-                    moved = true;
-                }
-            }
-
-            if (iteration > 0 && !moved)
-                break;
-
-            RecomputeCentres(x, labels, centres, k);
-        }
-
-        return labels;
-    }
-
-    /// <summary>
-    /// Greedy k-means++ seeding.
-    /// <para>
-    /// Plain k-means++ draws one candidate per seed, with probability
-    /// proportional to its squared distance from the nearest seed already
-    /// chosen. The greedy variant draws several, evaluates what each would do to
-    /// the total squared distance, and keeps the best — which costs a few
-    /// hundred extra operations and measurably improves the optimum EM
-    /// subsequently climbs to.
-    /// </para>
-    /// <para>
-    /// This is not a micro-optimisation. Fitting five components to data with
-    /// four real families, plain sampling landed on a local optimum roughly two
-    /// per cent worse by BIC than scikit-learn reached, consistently. The number
-    /// of trials below is scikit-learn's, and it closes that gap.
-    /// </para>
-    /// </summary>
-    private static double[,] KMeansPlusPlusSeeds(double[,] x, int k, Random rng)
-    {
-        int n = x.GetLength(0);
-        int d = x.GetLength(1);
-
-        int trials = 2 + (int)Math.Log(k);
-
-        var centres = new double[k, d];
-        var nearest = new double[n];
-
-        int first = rng.Next(n);
-        for (int j = 0; j < d; j++)
-            centres[0, j] = x[first, j];
-
-        double potential = 0.0;
-        for (int i = 0; i < n; i++)
-        {
-            nearest[i] = SquaredDistance(x, i, centres, 0, d);
-            potential += nearest[i];
-        }
-
-        for (int c = 1; c < k; c++)
-        {
-            int best = -1;
-            double bestPotential = double.MaxValue;
-
-            for (int trial = 0; trial < trials; trial++)
-            {
-                int index = SampleProportionally(nearest, potential, rng, n);
-
-                double trialPotential = 0.0;
-                for (int i = 0; i < n; i++)
-                    trialPotential += Math.Min(nearest[i], SquaredDistance(x, i, x, index, d));
-
-                if (trialPotential < bestPotential)
-                {
-                    bestPotential = trialPotential;
-                    best = index;
-                }
-            }
-
-            for (int j = 0; j < d; j++)
-                centres[c, j] = x[best, j];
-
-            potential = 0.0;
-            for (int i = 0; i < n; i++)
-            {
-                nearest[i] = Math.Min(nearest[i], SquaredDistance(x, i, x, best, d));
-                potential += nearest[i];
-            }
-        }
-
-        return centres;
-    }
-
-    /// <summary>
-    /// Draws an index with probability proportional to <paramref name="weights"/>.
-    /// Falls back to uniform when every weight is zero, which happens when every
-    /// point coincides with a seed already chosen — rare in general, and routine
-    /// when a model repeats the same member hundreds of times.
-    /// </summary>
-    private static int SampleProportionally(double[] weights, double total, Random rng, int n)
-    {
-        if (total <= 0.0 || double.IsNaN(total))
-            return rng.Next(n);
-
-        double target = rng.NextDouble() * total;
-        double cumulative = 0.0;
-
-        for (int i = 0; i < n; i++)
-        {
-            cumulative += weights[i];
-            if (cumulative >= target)
-                return i;
-        }
-
-        return n - 1;
-    }
-
-    private static double SquaredDistance(double[,] a, int rowA, double[,] b, int rowB, int d)
-    {
-        double sum = 0.0;
-        for (int j = 0; j < d; j++)
-        {
-            double delta = a[rowA, j] - b[rowB, j];
-            sum += delta * delta;
-        }
-
-        return sum;
-    }
-
-    private static void RecomputeCentres(double[,] x, int[] labels, double[,] centres, int k)
-    {
-        int n = x.GetLength(0);
-        int d = x.GetLength(1);
-
-        var counts = new int[k];
-        var sums = new double[k, d];
-
-        for (int i = 0; i < n; i++)
-        {
-            counts[labels[i]]++;
-            for (int j = 0; j < d; j++)
-                sums[labels[i], j] += x[i, j];
-        }
-
-        for (int c = 0; c < k; c++)
-        {
-            if (counts[c] == 0)
-            {
-                // An empty cluster leaves a component with no data and a
-                // degenerate covariance. Move it onto whichever point is worst
-                // served by its current centre — the same repair k-means
-                // implementations generally make, and it keeps k honest.
-                MoveToWorstServedPoint(x, labels, centres, c);
-                continue;
-            }
-
-            for (int j = 0; j < d; j++)
-                centres[c, j] = sums[c, j] / counts[c];
-        }
-    }
-
-    private static void MoveToWorstServedPoint(double[,] x, int[] labels, double[,] centres, int empty)
-    {
-        int n = x.GetLength(0);
-        int d = x.GetLength(1);
-
-        int worst = 0;
-        double worstDistance = -1.0;
-
-        for (int i = 0; i < n; i++)
-        {
-            int owner = labels[i];
-            double distance = 0.0;
-            for (int j = 0; j < d; j++)
-            {
-                double delta = x[i, j] - centres[owner, j];
-                distance += delta * delta;
-            }
-
-            if (distance > worstDistance)
-            {
-                worstDistance = distance;
-                worst = i;
-            }
-        }
-
-        for (int j = 0; j < d; j++)
-            centres[empty, j] = x[worst, j];
-
-        labels[worst] = empty;
     }
 
     /// <summary>

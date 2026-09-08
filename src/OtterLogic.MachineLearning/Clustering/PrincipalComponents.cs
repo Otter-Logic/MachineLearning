@@ -80,6 +80,50 @@ public sealed class PrincipalComponents
     /// </param>
     public static PrincipalComponents Fit(double[,] x, double varianceThreshold = 0.99, bool whiten = true)
     {
+        var (mean, eigenvalues, eigenvectors, total) = Decompose(x);
+        int keep = ChooseCount(eigenvalues, total, varianceThreshold);
+        return Build(mean, eigenvalues, eigenvectors, total, keep, whiten);
+    }
+
+    /// <summary>
+    /// Fits and keeps a fixed number of components, rather than however many a
+    /// variance threshold asks for.
+    /// <para>
+    /// This is the overload to use when the downstream step needs a known
+    /// dimensionality — a fixed projection every solve, so results stay
+    /// comparable when the data changes slightly and a threshold would have
+    /// silently kept a different number.
+    /// </para>
+    /// <para>
+    /// The count is clamped to the columns available. Asking for three from a
+    /// planar frame, where the out-of-plane degrees of freedom are identically
+    /// zero and have already been dropped, returns what there is rather than
+    /// failing — check <see cref="Count"/> against what you asked for.
+    /// </para>
+    /// </summary>
+    /// <param name="x">n x d data, rows are samples.</param>
+    /// <param name="componentCount">How many components to keep, at least one.</param>
+    /// <param name="whiten">Scale the components to unit variance.</param>
+    public static PrincipalComponents FitCount(double[,] x, int componentCount, bool whiten = true)
+    {
+        if (componentCount < 1)
+            throw new ArgumentOutOfRangeException(nameof(componentCount), componentCount,
+                "Need at least one component.");
+
+        var (mean, eigenvalues, eigenvectors, total) = Decompose(x);
+        int keep = Math.Min(componentCount, eigenvalues.Length);
+        return Build(mean, eigenvalues, eigenvectors, total, keep, whiten);
+    }
+
+    /// <summary>
+    /// The eigendecomposition both overloads share — everything up to the point
+    /// where they differ on how many components to keep.
+    /// </summary>
+    private static (double[] Mean, double[] Eigenvalues, double[,] Eigenvectors, double Total) Decompose(
+        double[,] x)
+    {
+        ArgumentNullException.ThrowIfNull(x);
+
         int n = x.GetLength(0);
         int d = x.GetLength(1);
         if (n < 2)
@@ -118,8 +162,13 @@ public sealed class PrincipalComponents
             if (eigenvalues[i] < 0.0)
                 eigenvalues[i] = 0.0;
 
-        double total = eigenvalues.Sum();
-        int keep = ChooseCount(eigenvalues, total, varianceThreshold);
+        return (mean, eigenvalues, eigenvectors, eigenvalues.Sum());
+    }
+
+    private static PrincipalComponents Build(
+        double[] mean, double[] eigenvalues, double[,] eigenvectors, double total, int keep, bool whiten)
+    {
+        int d = mean.Length;
 
         var components = new double[keep, d];
         var explained = new double[keep];

@@ -119,24 +119,70 @@ here.
   order, a small upstream change permutes them and every downstream colour and
   geometry assignment jumps for no visible reason.
 
+## What this repo is, and what it is not
+
+This is the **engine**. It holds the methods, each exposing every setting, and it
+takes no view on which one anybody should use.
+
+The layer that takes a view is
+[6DOF Behaviour Classifier](https://github.com/Otter-Logic/6DOF_Behaviour_Classifier),
+a toolkit above this one. It runs all three clustering methods over structural
+demand data and picks between them, so that a user with analysis results needs no
+opinion about covariance shapes. Its rules about *which* method suits *what* data
+belong there and not here — this repo would be wrong to have an opinion, because
+Fabrication clustering panels wants the same algorithms and different judgement.
+
+```
+Core  ->  MachineLearning  ->  6DOF Behaviour Classifier
+          (this repo)          (the end product)
+```
+
+## The three clustering methods
+
+Not three implementations of one idea. Each assumes something different about
+what a cluster is, and which assumption holds is a property of the data.
+
+| | Told how many? | Every sample placed? | Cluster shape |
+|---|---|---|---|
+| `KMeans` | yes | yes | round, similar size |
+| `GaussianMixture` | yes | yes, softly | any ellipsoid, may overlap |
+| `Hdbscan` | **no** | **no** | any shape, density-defined |
+
+`KMeans` is public in its own right but is also EM's seeder — there is one copy,
+and the mixture calls it. A second would be a second thing to keep in step with
+the scikit-learn parity fixtures.
+
+`Hdbscan` is core distances, a mutual reachability MST by Prim's, a condensed
+cluster tree, and excess-of-mass extraction. The MST is O(n²) with no distance
+matrix held in memory: at a few thousand members in three components that is
+milliseconds and a few kilobytes, and it avoids the spatial index the reference
+implementation needs at scale.
+
+`ClusterQuality` holds silhouette and Davies-Bouldin. Both exclude noise rather
+than scoring it as a cluster — noise is not a group and has no centre, and
+counting it as one would punish HDBSCAN for the thing it exists to do. Both are
+also documented as what they are: compactness measures, which makes them useful
+for comparing partitions and actively misleading for comparing *algorithms*.
+
 ## Grasshopper
 
-Three components, in the Rhino3D repo — nothing in this one touches the
-Grasshopper API.
+Components live in the Rhino3D repo — nothing here touches the Grasshopper API.
 
-- **`OL_Cluster`** — the pipeline. Out: labels, groups, responsibilities,
-  confidence, centres in the original units, and a report.
-- **`OL_ClusterCount`** — the BIC sweep, as parallel lists to plot. Separate
-  because a sweep of seven values at ten restarts is seventy fits, and that
-  should not re-run when an unrelated slider moves. It deliberately does not pick
-  a winner: the useful k is the one that is both near the elbow and means
-  something to whoever details the result.
-- **`OL_CovarianceType`** — an `EnumValueList` dropdown, following `TrussType`.
+Under **Machine Learning**, the three methods raw, one component each, following
+LunchBoxML's shape so a definition already wired for those can be retargeted:
+Training Inputs in, Result out.
+
+- **K-Means Clustering** — clusters, restarts, seed. Out: result, clusters,
+  centroids, inertia.
+- **Gaussian Mixture** — components, covariance, restarts, seed. Out: result,
+  groups, probability, confidence, centres, likelihood, BIC.
+- **HDBSCAN Clustering** — minimum cluster size, minimum samples. Out: result,
+  clusters, noise, probability, stability, noise fraction.
+- **Covariance Type** — an `EnumValueList` dropdown, following `TrussType`.
 
 Grasshopper only. These are wire-data tools with no document-level shape, so
 nothing here gets a Rhino command or a toolbar button.
 
 The **centres** output matters more than it looks. A grouping nobody can name is a
-grouping nobody will act on, and mapping the cluster centres back through
-whitening, PCA, standardisation and the log is what lets somebody say "group
-three is the high-moment family".
+grouping nobody will act on, and mapping the cluster centres back into the
+original units is what lets somebody say "group three is the high-moment family".
