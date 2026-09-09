@@ -1,4 +1,4 @@
-using OtterLogic.MachineLearning.Clustering;
+﻿using OtterLogic.MachineLearning.Decomposition;
 using Xunit;
 
 namespace OtterLogic.MachineLearning.Tests;

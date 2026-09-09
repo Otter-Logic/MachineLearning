@@ -1,4 +1,4 @@
-namespace OtterLogic.MachineLearning.Clustering;
+﻿namespace OtterLogic.MachineLearning.Decomposition;
 
 /// <summary>
 /// Principal component analysis by exact eigendecomposition of the sample

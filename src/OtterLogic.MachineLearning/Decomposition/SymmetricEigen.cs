@@ -1,4 +1,4 @@
-namespace OtterLogic.MachineLearning.Clustering;
+﻿namespace OtterLogic.MachineLearning.Decomposition;
 
 /// <summary>
 /// Eigendecomposition of a real symmetric matrix by cyclic Jacobi rotation.

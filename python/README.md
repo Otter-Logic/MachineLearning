@@ -2,7 +2,7 @@
 
 **No user of the plug-in installs any of this.** Not IronPython, not Rhino 8's
 embedded CPython, not a system interpreter. Everything here runs on a developer's
-machine and stops there; the clustering pipeline that ships is C# end to end.
+machine and stops there; everything that ships is C# end to end.
 
 Two jobs, present and future.
 
@@ -23,16 +23,15 @@ Commit the JSON it produces. Regenerate it when the fixture data or the
 comparison changes — not on every run, or the tests are asserting against
 whatever was generated last rather than against a fixed reference.
 
-The fixtures answer two separate questions, and it is worth keeping them
-separate:
+What is generated here is the decomposition fixtures — **`pca_plain.json`** and
+**`pca_whiten.json`**. PCA is deterministic up to a sign, so this is a straight
+exactness check: the C# should match scikit-learn to machine precision once the
+component signs are put in a canonical order.
 
-- **`em_*.json`** pin the initial parameters, so both implementations start from
-  exactly the same place. From there they should agree to machine precision, and
-  any drift is an arithmetic bug. Nothing about local optima enters into it.
-- **`quality.json`** and **`sweep.json`** let each implementation initialise
-  itself, ten restarts each, and compare on BIC and on how far the two labellings
-  agree. Matching parameter for parameter here would be a coincidence — these are
-  two non-convex optimisers on the same surface.
+The clustering fixtures — `em_*.json`, `quality.json`, `sweep.json` — moved to
+[Unsupervised](https://github.com/Otter-Logic/Unsupervised) along with the
+algorithms they test. Both generators still build their input from the same
+`make_members`, which is why the two files look alike at the top.
 
 ## Later: training
 

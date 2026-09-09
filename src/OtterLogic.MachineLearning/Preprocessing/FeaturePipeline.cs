@@ -1,4 +1,4 @@
-namespace OtterLogic.MachineLearning.Clustering;
+﻿namespace OtterLogic.MachineLearning.Preprocessing;
 
 /// <summary>
 /// The preprocessing that runs before PCA and the mixture: row normalisation,
