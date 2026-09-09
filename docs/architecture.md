@@ -125,15 +125,15 @@ This is the **engine**. It holds the methods, each exposing every setting, and i
 takes no view on which one anybody should use.
 
 The layer that takes a view is
-[6DOF Behaviour Classifier](https://github.com/Otter-Logic/6DOF_Behaviour_Classifier),
-a toolkit above this one. It runs all three clustering methods over structural
-demand data and picks between them, so that a user with analysis results needs no
-opinion about covariance shapes. Its rules about *which* method suits *what* data
-belong there and not here — this repo would be wrong to have an opinion, because
+[Clustering Tool](https://github.com/Otter-Logic/Clustering_Tool), a toolkit
+above this one. It runs all three clustering methods over structural demand data
+and picks between them, so that a user with analysis results needs no opinion
+about covariance shapes. Its rules about *which* method suits *what* data belong
+there and not here — this repo would be wrong to have an opinion, because
 Fabrication clustering panels wants the same algorithms and different judgement.
 
 ```
-Core  ->  MachineLearning  ->  6DOF Behaviour Classifier
+Core  ->  MachineLearning  ->  Clustering Tool
           (this repo)          (the end product)
 ```
 
