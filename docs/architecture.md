@@ -42,7 +42,8 @@ needs and nothing else:
 | Namespace | Holds | Why it is shared |
 |---|---|---|
 | `Preprocessing` | `FeaturePipeline` — log1p, standardisation, weights, the constant-column check, and the inverse of all of it | every paradigm scales its features |
-| `Decomposition` | `PrincipalComponents`, and the `SymmetricEigen` Jacobi solver under it | PCA is a preprocessing step for a regressor as readily as it is an unsupervised tool |
+| `Decomposition` | `PrincipalComponents`, the `SymmetricEigen` Jacobi solver under it, and `LeadingEigen` for large sparse operators | PCA is a preprocessing step for a regressor as readily as it is an unsupervised tool; a spectral embedding is as useful to a graph network as to a clustering |
+| `Graphs` | `WeightedGraph` — sparse weighted edges, the nearest-neighbour graph, the normalised propagation operator | spectral clustering and message passing in Unsupervised read it today; a trained graph network in DeepLearning will read the same thing |
 | `Data` *(planned)* | dataset contract, sweep recorder, train/test split | a supervised sweep and an RL rollout both need somewhere to put rows |
 | `Inference` *(planned)* | ONNX load, the sidecar column-order assertion, tensor marshalling | every learned model, whatever trained it, comes back the same way |
 
@@ -114,8 +115,9 @@ loads into Grasshopper, so shipping a second copy at a different version is an
 assembly conflict waiting for a user who has both. Not ML.NET, which is healthy
 and actively released but offers only a randomised PCA built for matrices far
 larger than six columns, and wants data as a lazy columnar `IDataView` rather
-than a list on a wire. Not MathNet.Numerics, which would be carried for a 6x6
-symmetric eigensolve that is sixty lines of Jacobi rotation.
+than a list on a wire. Not MathNet.Numerics, which would be carried for a small
+symmetric eigensolve that is sixty lines of Jacobi rotation and a sparse leading
+one that is a filtered subspace iteration.
 
 `Microsoft.ML.OnnxRuntime` arrives with `Inference`, and that one is unavoidable.
 
@@ -135,7 +137,8 @@ expects something Gaussian, and forces beside moments with no shared scale.
 is a claim about a discipline, and it belongs in the toolkit that has one —
 [StructuralDesign](https://github.com/Otter-Logic/StructuralDesign) chooses no
 log transform and three components because it knows the columns are demands.
-This repo offers the steps and takes no view.
+This repo offers the steps and takes no view, which is why every switch on
+`FeaturePipeline` defaults off.
 
 ### Weighting only works because PCA is there
 

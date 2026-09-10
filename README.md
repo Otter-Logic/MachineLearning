@@ -27,7 +27,17 @@ is what makes this shared rather than clustering's.
 
 **Decomposition** — `PrincipalComponents` and the `SymmetricEigen` Jacobi solver
 under it. PCA is a preprocessing step for a regressor as readily as it is an
-unsupervised tool in its own right, so it lives below both.
+unsupervised tool in its own right, so it lives below both. `LeadingEigen` finds
+the few largest eigenpairs of a large sparse operator without forming it —
+Chebyshev-filtered subspace iteration, fast enough for a spectral clustering of
+3,000 samples in under half a second.
+
+**Graphs** — `WeightedGraph`: which samples are related and how strongly, as
+sorted sparse rows, with the nearest-neighbour graph of a point cloud and the
+symmetric normalised propagation every graph method shares. Spectral clustering,
+constrained hierarchies and message passing in Unsupervised consume it today, and
+a trained graph network in DeepLearning will want exactly the same input — which
+is the test for living here.
 
 **Data** *(planned)* — the dataset contract, the sweep recorder, train/test
 split. Phase one of [docs/machine-learning.md](docs/machine-learning.md), and the
@@ -70,7 +80,8 @@ shipped as a frozen graph. If no, it is an algorithm and it is written in C#.
 ```
 src/OtterLogic.MachineLearning/
   Preprocessing/    scaling, weighting, the constant-column check
-  Decomposition/    PCA and the symmetric eigensolver under it
+  Decomposition/    PCA, the symmetric eigensolver, the leading-eigenvector solver
+  Graphs/           the weighted graph every graph method consumes
 python/             development only - never ships, never installed by a user
   fixtures/         scikit-learn reference fixtures for the C# tests
 tests/              xunit; runs anywhere, no Rhino needed
@@ -80,8 +91,9 @@ docs/               architecture and design notes
 
 ## Dependencies
 
-None today, deliberately. A 6x6 symmetric eigensolve is sixty lines of Jacobi
-rotation, which is not worth carrying MathNet for.
+None today, deliberately. A small symmetric eigensolve is sixty lines of Jacobi
+rotation and a large sparse one a filtered subspace iteration, neither worth
+carrying MathNet for.
 `Microsoft.ML.OnnxRuntime` arrives with the Inference project, and that one is
 unavoidable — leave `ExcludeAssets="runtime"` off it, unlike RhinoCommon, because
 its native binaries genuinely must sit next to the `.gha`.

@@ -5,11 +5,17 @@
 /// log transform, standardisation, and per-column weights.
 /// <para>
 /// This is where most of the quality of a grouping is decided, and it is the
-/// part no library hands you. A mixture fitted to raw six-degree-of-freedom
-/// magnitudes will give an answer; it will usually be a poor one, because the
-/// inputs break two assumptions at once — the magnitudes are heavily
-/// right-skewed where the model expects something Gaussian, and forces in kN sit
-/// beside moments in kNm with no shared scale.
+/// part no library hands you. A mixture fitted to raw measurements will give an
+/// answer; it will often be a poor one, because real inputs break two assumptions
+/// at once — magnitudes are heavily right-skewed where the model expects
+/// something Gaussian, and columns in different units sit side by side with no
+/// shared scale.
+/// </para>
+/// <para>
+/// <em>Which</em> of these steps suits what data is deliberately left to the
+/// caller, so every switch defaults off. Whether a column is skewed enough to log,
+/// or whether size or only shape should count, is a claim about what the columns
+/// mean — and that belongs to the toolkit that knows.
 /// </para>
 /// </summary>
 public sealed class FeaturePipeline
@@ -35,8 +41,9 @@ public sealed class FeaturePipeline
     /// <summary>
     /// Indices of the input columns that survived. A column with no variance
     /// carries no information and produces a singular covariance, so it is
-    /// dropped rather than regularised into pretending otherwise. A planar frame
-    /// hits this every time, in its out-of-plane degrees of freedom.
+    /// dropped rather than regularised into pretending otherwise. Any flat case
+    /// of a quantity measured in three dimensions hits this every time, in the
+    /// columns for the dimension it lacks.
     /// </summary>
     public int[] KeptColumns { get; }
 
@@ -45,17 +52,17 @@ public sealed class FeaturePipeline
     /// </summary>
     /// <param name="x">n x d raw data.</param>
     /// <param name="logTransform">
-    /// Apply log(1 + x). Worth having on for magnitudes: a handful of heavily
-    /// loaded members and a long tail of light ones is not a shape a Gaussian
-    /// describes, and without this one component swallows the tail while the
-    /// rest split hairs among the small values.
+    /// Apply log(1 + x). Worth having on for right-skewed magnitudes: a handful
+    /// of very large values and a long tail of small ones is not a shape a
+    /// Gaussian describes, and without this one component swallows the tail while
+    /// the rest split hairs among the small values. Off by default.
     /// </param>
     /// <param name="normaliseRows">
     /// Scale each row to unit length first, discarding overall magnitude and
-    /// keeping only the proportion between degrees of freedom. This is the
-    /// difference between grouping members that could share one physical detail
-    /// and grouping members that want the same <em>kind</em> of detail whatever
-    /// their size. It changes the answer more than any other switch here.
+    /// keeping only the proportion between columns. This is the difference
+    /// between grouping samples that are alike in size and grouping samples that
+    /// are alike in <em>shape</em> whatever their size. It changes the answer more
+    /// than any other switch here.
     /// </param>
     /// <param name="weights">
     /// Per-column multipliers applied after standardisation, so a weight of one
@@ -70,7 +77,7 @@ public sealed class FeaturePipeline
     /// </para>
     /// </param>
     public static FeaturePipeline Fit(
-        double[,] x, bool logTransform = true, bool normaliseRows = false, double[]? weights = null)
+        double[,] x, bool logTransform = false, bool normaliseRows = false, double[]? weights = null)
     {
         ArgumentNullException.ThrowIfNull(x);
 
@@ -108,7 +115,7 @@ public sealed class FeaturePipeline
 
         // A column is dropped when it is constant, or when its weight asks for
         // it to be. The scale threshold is relative to the column's own centre
-        // so it means the same thing in kN as in kNm.
+        // so it means the same thing whatever units the column is in.
         var kept = new List<int>(d);
         for (int j = 0; j < d; j++)
         {
@@ -149,13 +156,13 @@ public sealed class FeaturePipeline
 
     /// <summary>
     /// Maps transformed points back to the original units, so a cluster centre
-    /// can be read as forces and moments.
+    /// can be read in the terms the data arrived in.
     /// <para>
     /// Dropped columns come back as their constant value. Row normalisation
     /// cannot be undone — the magnitude it divided out is gone — so with that
     /// switch on, a centre returns as a unit-length direction describing the
-    /// proportion between degrees of freedom rather than their size. That is
-    /// still the right answer to the question that switch asks.
+    /// proportion between columns rather than their size. That is still the right
+    /// answer to the question that switch asks.
     /// </para>
     /// </summary>
     public double[,] InverseTransform(double[,] z)
@@ -217,8 +224,7 @@ public sealed class FeaturePipeline
                 {
                     if (value < 0.0)
                         throw new ArgumentException(
-                            "The log transform expects non-negative values. Six-degree-of-freedom "
-                            + "magnitudes are non-negative by construction — if these are signed, "
+                            "The log transform expects non-negative values. If these are signed, "
                             + "take magnitudes first or turn the log transform off.", nameof(x));
 
                     value = Math.Log(1.0 + value);

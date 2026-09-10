@@ -9,7 +9,7 @@
 
     <IsPackable>true</IsPackable>
     <PackageId>OtterLogic.MachineLearning</PackageId>
-    <Description>Clustering, dataset capture and ONNX inference for the OtterLogic Rhino tools.</Description>
+    <Description>The shared base under the OtterLogic machine learning repos - feature preprocessing, decomposition and the graph contract, with datasets and ONNX inference to follow.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Otter-Logic/MachineLearning</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Otter-Logic/MachineLearning</RepositoryUrl>
@@ -17,10 +17,11 @@
 
   </PropertyGroup>
 
-  <!-- Deliberately no package references. The clustering pipeline is a Jacobi
-       eigendecomposition and an EM loop over six columns; MathNet would be
-       carried for a 6x6 symmetric eigensolve that is sixty lines. Revisit when
-       ONNX inference lands, which does need Microsoft.ML.OnnxRuntime. -->
+  <!-- Deliberately no package references. A Jacobi eigensolve for small
+       matrices and a filtered subspace iteration for large sparse ones are a few
+       hundred lines between them; MathNet would be carried for arithmetic that
+       is already here. Revisit when ONNX inference lands, which does need
+       Microsoft.ML.OnnxRuntime. -->
 
   <!-- A sibling checkout of Core wins; the published package is the fallback. -->
   <Choose>

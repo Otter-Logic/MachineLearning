@@ -4,12 +4,13 @@
 /// Principal component analysis by exact eigendecomposition of the sample
 /// covariance, with optional whitening.
 /// <para>
-/// At six columns the job PCA is doing here is not dimensionality reduction —
-/// it is <em>decorrelation and whitening</em>, plus dropping the directions a
-/// structure genuinely has no variance in. A planar frame has identically zero
-/// out-of-plane demand, and a column of zeros produces a singular covariance
-/// that stops EM dead. Retaining by cumulative variance rather than a fixed
-/// count is what makes that case handle itself.
+/// At a handful of columns the job PCA is doing here is not dimensionality
+/// reduction — it is <em>decorrelation and whitening</em>, plus dropping the
+/// directions the data genuinely has no variance in. A flat case of a
+/// three-dimensional quantity has columns that are identically zero, and a column
+/// of zeros produces a singular covariance that stops EM dead. Retaining by
+/// cumulative variance rather than a fixed count is what makes that case handle
+/// itself.
 /// </para>
 /// <para>
 /// It is also where per-column weighting becomes real. A mixture model with
@@ -95,10 +96,10 @@ public sealed class PrincipalComponents
     /// silently kept a different number.
     /// </para>
     /// <para>
-    /// The count is clamped to the columns available. Asking for three from a
-    /// planar frame, where the out-of-plane degrees of freedom are identically
-    /// zero and have already been dropped, returns what there is rather than
-    /// failing — check <see cref="Count"/> against what you asked for.
+    /// The count is clamped to the columns available. Asking for three from data
+    /// whose constant columns have already been dropped, leaving fewer than three,
+    /// returns what there is rather than failing — check <see cref="Count"/>
+    /// against what you asked for.
     /// </para>
     /// </summary>
     /// <param name="x">n x d data, rows are samples.</param>

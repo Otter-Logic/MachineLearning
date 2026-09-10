@@ -1,4 +1,4 @@
-"""Generate scikit-learn reference fixtures for the C# decomposition tests.
+"""Generate scikit-learn reference fixtures for the C# decomposition and graph tests.
 
 Run this, commit the JSON it writes, and the C# tests assert against it. Nothing
 here runs at plug-in runtime — scikit-learn is a reference implementation, not a
@@ -6,7 +6,9 @@ dependency.
 
 PCA is deterministic up to a sign, so this is a straight exactness check: given
 the same standardised input, the C# decomposition should match scikit-learn's to
-machine precision once the component signs are put in a canonical order.
+machine precision once the component signs are put in a canonical order. The
+graph fixture is the same kind of check for the nearest-neighbour graph, the
+normalised propagation operator and the leading-eigenvector solver.
 
 The clustering fixtures moved to the Unsupervised repo along with the algorithms
 they test.
@@ -101,6 +103,64 @@ def canonical_signs(components: np.ndarray) -> np.ndarray:
     return components * sign_flips(components)[:, None]
 
 
+def graph_fixture(k: int = 6, clusters: int = 3, seed: int = 11) -> dict:
+    """The nearest-neighbour graph, its normalised propagation, and its spectrum.
+
+    Three exactness checks in one, all against dense reference arithmetic:
+
+    *The graph.* scikit-learn's ``kneighbors_graph`` symmetrised as
+    ``0.5 * (A + A.T)``, which is what ``SpectralClustering`` does with it - so an
+    edge both ends chose weighs one and a one-sided edge a half.
+
+    *The operator.* ``D^-1/2 (A + sI) D^-1/2 X`` for s = 0 (spectral clustering's
+    normalised adjacency) and s = 1 (a graph convolution's renormalised one),
+    computed densely.
+
+    *The spectrum.* numpy's ``eigh`` on the normalised adjacency, shifted by the
+    identity and halved so it is positive semi-definite, which is the operator the
+    C# leading-eigenvector solver is handed.
+    """
+    from sklearn.datasets import make_blobs
+    from sklearn.neighbors import kneighbors_graph
+
+    x, _ = make_blobs(n_samples=90, n_features=3, centers=clusters, cluster_std=1.1, random_state=seed)
+
+    connectivity = kneighbors_graph(x, n_neighbors=k, mode="connectivity", include_self=False)
+    affinity = (0.5 * (connectivity + connectivity.T)).toarray()
+
+    rows, cols = np.nonzero(np.triu(affinity, k=1))
+    edges = [[int(a), int(b), float(affinity[a, b])] for a, b in zip(rows, cols)]
+
+    def propagate(self_weight: float) -> np.ndarray:
+        a = affinity + self_weight * np.eye(len(x))
+        degree = a.sum(axis=1)
+        scale = np.where(degree > 0, 1.0 / np.sqrt(degree), 0.0)
+        return (scale[:, None] * a * scale[None, :]) @ x
+
+    degree = affinity.sum(axis=1)
+    scale = 1.0 / np.sqrt(degree)
+    normalised = scale[:, None] * affinity * scale[None, :]
+    shifted = 0.5 * (normalised + np.eye(len(x)))
+    values, vectors = np.linalg.eigh(shifted)
+    order = np.argsort(values)[::-1]
+
+    return {
+        "name": "graph",
+        "neighbours": k,
+        "x": x.tolist(),
+        "expected": {
+            "edges": edges,
+            "propagate_plain": propagate(0.0).tolist(),
+            "propagate_self": propagate(1.0).tolist(),
+            # Values only. Well-separated blobs give a graph with an eigenvalue of
+            # one repeated once per component, and inside a repeated eigenvalue
+            # any rotation of the eigenvectors is as correct as any other - so the
+            # C# side checks its vectors by residual, not against these.
+            "leading_values": values[order][: clusters + 2].tolist(),
+        },
+    }
+
+
 def write(fixture: dict) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / f"{fixture['name']}.json"
@@ -115,6 +175,7 @@ def main() -> None:
     print("writing fixtures:")
     write(pca_fixture(prepared, whiten=True))
     write(pca_fixture(prepared, whiten=False))
+    write(graph_fixture())
     print(f"\n{raw.shape[0]} samples, {raw.shape[1]} columns")
 
 
