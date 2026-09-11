@@ -32,6 +32,13 @@ the few largest eigenpairs of a large sparse operator without forming it —
 Chebyshev-filtered subspace iteration, fast enough for a spectral clustering of
 3,000 samples in under half a second.
 
+**Distances** — `Euclidean`: the distance between two rows, and the exact
+k-nearest search built on it, nearest first with ties to the lower index.
+Every paradigm measures it — clustering to place a sample, a graph to decide
+which samples to join, a nearest-neighbour regressor when there is one — and it
+had been written out in six places above, one of them inside k-means. One copy
+summed in one order is also what keeps results bit-identical wherever it is used.
+
 **Graphs** — `WeightedGraph`: which samples are related and how strongly, as
 sorted sparse rows, with the nearest-neighbour graph of a point cloud and the
 symmetric normalised propagation every graph method shares. Spectral clustering,
@@ -81,6 +88,7 @@ shipped as a frozen graph. If no, it is an algorithm and it is written in C#.
 src/OtterLogic.MachineLearning/
   Preprocessing/    scaling, weighting, the constant-column check
   Decomposition/    PCA, the symmetric eigensolver, the leading-eigenvector solver
+  Distances/        Euclidean distance and the k-nearest search
   Graphs/           the weighted graph every graph method consumes
 python/             development only - never ships, never installed by a user
   fixtures/         scikit-learn reference fixtures for the C# tests

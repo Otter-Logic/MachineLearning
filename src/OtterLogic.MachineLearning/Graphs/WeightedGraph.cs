@@ -1,3 +1,5 @@
+using OtterLogic.MachineLearning.Distances;
+
 namespace OtterLogic.MachineLearning.Graphs;
 
 /// <summary>
@@ -105,10 +107,9 @@ public sealed class WeightedGraph
     /// throws away, that mutual neighbours are the stronger evidence.
     /// </para>
     /// <para>
-    /// O(n^2 d) time and O(n k) memory, with no spatial index. At a few thousand
-    /// samples in a handful of columns that is well under a second, and it avoids
-    /// holding an n x n distance matrix. Ties are broken towards the lower index so
-    /// the graph is a function of the data alone.
+    /// The neighbours come from <see cref="Euclidean.Nearest"/>: O(n^2 d) time and
+    /// O(n k) memory, ties to the lower index, so the graph is a function of the
+    /// data alone.
     /// </para>
     /// </summary>
     /// <param name="x">n x d data, rows are samples.</param>
@@ -118,54 +119,13 @@ public sealed class WeightedGraph
         ArgumentNullException.ThrowIfNull(x);
 
         int n = x.GetLength(0);
-        int d = x.GetLength(1);
 
         if (neighbours < 1 || neighbours > n - 1)
             throw new ArgumentOutOfRangeException(nameof(neighbours), neighbours,
                 $"Need between 1 and {n - 1} neighbours for {n} samples.");
 
         int k = neighbours;
-        var chosen = new int[n, k];
-        var windowDistance = new double[k];
-        var windowIndex = new int[k];
-
-        for (int i = 0; i < n; i++)
-        {
-            Array.Fill(windowDistance, double.MaxValue);
-            Array.Fill(windowIndex, -1);
-
-            for (int j = 0; j < n; j++)
-            {
-                if (j == i)
-                    continue;
-
-                double distance = 0.0;
-                for (int c = 0; c < d; c++)
-                {
-                    double delta = x[i, c] - x[j, c];
-                    distance += delta * delta;
-                }
-
-                // Strictly less, so an equal distance never displaces the lower
-                // index already held — j arrives in ascending order.
-                if (distance >= windowDistance[k - 1])
-                    continue;
-
-                int position = k - 1;
-                while (position > 0 && windowDistance[position - 1] > distance)
-                {
-                    windowDistance[position] = windowDistance[position - 1];
-                    windowIndex[position] = windowIndex[position - 1];
-                    position--;
-                }
-
-                windowDistance[position] = distance;
-                windowIndex[position] = j;
-            }
-
-            for (int c = 0; c < k; c++)
-                chosen[i, c] = windowIndex[c];
-        }
+        var chosen = Euclidean.Nearest(x, k).Index;
 
         var unique = new Dictionary<long, double>(n * k);
         for (int i = 0; i < n; i++)
