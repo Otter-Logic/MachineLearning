@@ -44,7 +44,10 @@ sorted sparse rows, with the nearest-neighbour graph of a point cloud and the
 symmetric normalised propagation every graph method shares. Spectral clustering,
 constrained hierarchies and message passing in Unsupervised consume it today, and
 a trained graph network in DeepLearning will want exactly the same input — which
-is the test for living here.
+is the test for living here. `ShortestPaths` routes over the same graph from a
+set of sources, with the cost of each edge supplied by the caller rather than
+read off its similarity weight, and ties broken by index so a route never flips
+between equal choices from one solve to the next.
 
 **Data** *(planned)* — the dataset contract, the sweep recorder, train/test
 split. Phase one of [docs/machine-learning.md](docs/machine-learning.md), and the
@@ -89,7 +92,7 @@ src/OtterLogic.MachineLearning/
   Preprocessing/    scaling, weighting, the constant-column check
   Decomposition/    PCA, the symmetric eigensolver, the leading-eigenvector solver
   Distances/        Euclidean distance and the k-nearest search
-  Graphs/           the weighted graph every graph method consumes
+  Graphs/           the weighted graph every graph method consumes, and shortest paths over it
 python/             development only - never ships, never installed by a user
   fixtures/         scikit-learn reference fixtures for the C# tests
 tests/              xunit; runs anywhere, no Rhino needed
