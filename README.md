@@ -47,7 +47,12 @@ a trained graph network in DeepLearning will want exactly the same input — whi
 is the test for living here. `ShortestPaths` routes over the same graph from a
 set of sources, with the cost of each edge supplied by the caller rather than
 read off its similarity weight, and ties broken by index so a route never flips
-between equal choices from one solve to the next.
+between equal choices from one solve to the next. `Centrality` measures how much
+of a graph's traffic passes through each node — betweenness by hop count, exact up
+to a couple of thousand nodes and estimated from evenly spread sources beyond — and
+`CutVertices` how much of a graph each node alone holds on. Both are readings of a
+graph that a clustering uses as features and a trained network would use as
+inputs, so they sit beside the graph rather than above it.
 
 **Data** *(planned)* — the dataset contract, the sweep recorder, train/test
 split. Phase one of [docs/machine-learning.md](docs/machine-learning.md), and the
