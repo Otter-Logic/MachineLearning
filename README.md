@@ -32,6 +32,22 @@ the few largest eigenpairs of a large sparse operator without forming it —
 Chebyshev-filtered subspace iteration, fast enough for a spectral clustering of
 3,000 samples in under half a second.
 
+**Shapes** — `ShapeSignature`: describes every outline in a population by the
+same row of numbers, learned from the population rather than chosen in advance.
+Each outline is read at a fixed count of points evenly along its length, aligned
+to the population's own average — where the reading starts is searched for
+continuously, since a closed outline has no first point and the corner it was
+listed from is an accident of drawing — and decomposed. A shape is then where it
+sits among the others, which catches a notch, a curve or a raked corner without
+any of them having been anticipated.
+
+The scores are scaled so the distance between two rows *is* the root-mean-square
+distance between the two outlines, so a tolerance on the signature is a tolerance
+in model units. What counts as the same shape is the caller's to say: whether a
+mirror is the same thing, whether size matters, and how many turns of it are
+still it. Fabrication's panel typology is the first consumer, and a supervised
+model over shapes would want exactly this, which is the test for living here.
+
 **Distances** — `Euclidean`: the distance between two rows, and the exact
 k-nearest search built on it, nearest first with ties to the lower index.
 Every paradigm measures it — clustering to place a sample, a graph to decide
@@ -96,6 +112,7 @@ shipped as a frozen graph. If no, it is an algorithm and it is written in C#.
 src/OtterLogic.MachineLearning/
   Preprocessing/    scaling, weighting, the constant-column check
   Decomposition/    PCA, the symmetric eigensolver, the leading-eigenvector solver
+  Shapes/           outlines in, a learned row of numbers per outline out
   Distances/        Euclidean distance and the k-nearest search
   Graphs/           the weighted graph every graph method consumes, and shortest paths over it
 python/             development only - never ships, never installed by a user
