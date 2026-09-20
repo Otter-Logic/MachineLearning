@@ -9,7 +9,7 @@
 
     <IsPackable>true</IsPackable>
     <PackageId>OtterLogic.MachineLearning</PackageId>
-    <Description>The shared base under the OtterLogic machine learning repos - feature preprocessing, decomposition and the graph contract, with datasets and ONNX inference to follow.</Description>
+    <Description>The shared base under the OtterLogic machine learning repos - feature preprocessing, decomposition, the graph contract and the dataset contract, with ONNX inference to follow.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Otter-Logic/MachineLearning</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Otter-Logic/MachineLearning</RepositoryUrl>

@@ -44,7 +44,7 @@ needs and nothing else:
 | `Preprocessing` | `FeaturePipeline` — log1p, standardisation, weights, the constant-column check, and the inverse of all of it | every paradigm scales its features |
 | `Decomposition` | `PrincipalComponents`, the `SymmetricEigen` Jacobi solver under it, and `LeadingEigen` for large sparse operators | PCA is a preprocessing step for a regressor as readily as it is an unsupervised tool; a spectral embedding is as useful to a graph network as to a clustering |
 | `Graphs` | `WeightedGraph` — sparse weighted edges, the nearest-neighbour graph, the normalised propagation operator | spectral clustering and message passing in Unsupervised read it today; a trained graph network in DeepLearning will read the same thing |
-| `Data` *(planned)* | dataset contract, sweep recorder, train/test split | a supervised sweep and an RL rollout both need somewhere to put rows |
+| `Data` | `DatasetSchema`, `Dataset`, `DatasetFolder` — one CSV per model beside a `schema.json` — and `GroupSplit`; the sweep recorder is still planned | a supervised sweep and an RL rollout both need somewhere to put rows, and every paradigm that scores itself needs the split to be by group |
 | `Inference` *(planned)* | ONNX load, the sidecar column-order assertion, tensor marshalling | every learned model, whatever trained it, comes back the same way |
 
 The algorithms live one layer up. Clustering is in

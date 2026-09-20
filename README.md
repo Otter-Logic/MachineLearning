@@ -70,9 +70,18 @@ to a couple of thousand nodes and estimated from evenly spread sources beyond �
 graph that a clustering uses as features and a trained network would use as
 inputs, so they sit beside the graph rather than above it.
 
-**Data** *(planned)* — the dataset contract, the sweep recorder, train/test
-split. Phase one of [docs/machine-learning.md](docs/machine-learning.md), and the
-part people skip and then regret.
+**Data** — the dataset contract. A `DatasetSchema` says which columns a table has,
+in which order, for what, and which version of the feature code produced them; a
+`Dataset` holds rows against it; and `DatasetFolder` keeps one on disk as a
+`schema.json` beside one CSV per model the rows came from. One file per model
+because that is how the data is gathered — a model at a time, from Grasshopper,
+over months — so a re-solve overwrites rather than appends, the file name is the
+group, and curating the set is deleting a file. The schema is checked on every
+write, which is what stops the twentieth model going in with two columns swapped.
+`GroupSplit` holds back whole groups for testing and deliberately offers no split
+by row: rows from one model are near-copies of each other, and a score from a
+random split measures recognition rather than prediction. The sweep recorder is
+still to come. See [docs/user-trained-models-plan.md](docs/user-trained-models-plan.md).
 
 **Inference** *(planned)* — a separate project, because it is the one genuine
 dependency seam. `Microsoft.ML.OnnxRuntime` has native binaries, and a toolkit
