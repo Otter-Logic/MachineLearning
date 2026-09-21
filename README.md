@@ -4,12 +4,13 @@ The shared base every learning paradigm needs: feature preparation,
 decomposition, the dataset contract, and the ONNX plumbing.
 
 A layer rather than a domain. It sits above
-[Core](https://github.com/Otter-Logic/Core) and below the paradigm repos, and any
+[Core](https://github.com/Otter-Logic/Core) and
+[Graphs](https://github.com/Otter-Logic/Graphs) and below the paradigm repos, and any
 of them may reference it. See [docs/architecture.md](docs/architecture.md) for why
 that exception exists.
 
 ```
-                       Core
+                  Core     Graphs
                         ↑
                  MachineLearning          ← this repo
                         ↑
@@ -55,27 +56,19 @@ which samples to join, a nearest-neighbour regressor when there is one — and i
 had been written out in six places above, one of them inside k-means. One copy
 summed in one order is also what keeps results bit-identical wherever it is used.
 
-**Graphs** — `WeightedGraph`: which samples are related and how strongly, as
-sorted sparse rows, with the nearest-neighbour graph of a point cloud and the
-symmetric normalised propagation every graph method shares. Spectral clustering,
-constrained hierarchies and message passing in Unsupervised consume it today, and
-a trained graph network in DeepLearning will want exactly the same input — which
-is the test for living here. `ShortestPaths` routes over the same graph from a
-set of sources, with the cost of each edge supplied by the caller rather than
-read off its similarity weight, and ties broken by index so a route never flips
-between equal choices from one solve to the next. `Centrality` measures how much
-of a graph's traffic passes through each node — betweenness by hop count, exact up
-to a couple of thousand nodes and estimated from evenly spread sources beyond — and
-`CutVertices` how much of a graph each node alone holds on. Both are readings of a
-graph that a clustering uses as features and a trained network would use as
-inputs, so they sit beside the graph rather than above it. `PotentialFlow` answers
-the question a route cannot — not which way is nearest but how much passes through
-here — by solving the graph Laplacian with some nodes grounded: equal routes share
-the flow, so a symmetric graph gets a symmetric answer, where a route search has
-to break the tie one way and make mirror-image nodes differ. `Condensation` ranks
-the nodes of a directed graph by what they depend on, folding every cycle into one
-component first, since dependence that runs both ways is not a hierarchy and
-forcing an order onto it would only record which arc the search met first.
+**Distances** also holds `NeighbourGraph.Of`, the k-nearest-neighbour graph of a
+sample matrix with scikit-learn's symmetrisation — the way into the graph methods
+for a caller with only a point cloud. `NeighbourGraph.ByDistance` is the same
+neighbours weighed the other way round — each edge the distance it spans, kept
+if either end chose it, left out where a caller's predicate says it is blocked —
+for a graph that is about to be routed over rather than clustered on, where a
+high weight has to mean far and not alike. The graph they return, `WeightedGraph`, and
+everything that runs on one — shortest paths, centrality, cut vertices, potential
+flow, condensation — moved down into [Graphs](https://github.com/Otter-Logic/Graphs),
+because a toolkit routing a toolpath wants them with no machine learning in
+sight. This one constructor stayed: it measures a distance between samples, and
+Graphs references nothing, so it cannot. `LeadingEigen` and everything above
+still receive the same graph type, now from one layer further down.
 
 **Data** — the dataset contract. A `DatasetSchema` says which columns a table has,
 in which order, for what, and which version of the feature code produced them; a
@@ -129,8 +122,7 @@ src/OtterLogic.MachineLearning/
   Preprocessing/    scaling, weighting, the constant-column check
   Decomposition/    PCA, the symmetric eigensolver, the leading-eigenvector solver
   Shapes/           outlines in, a learned row of numbers per outline out
-  Distances/        Euclidean distance and the k-nearest search
-  Graphs/           the weighted graph every graph method consumes, and shortest paths over it
+  Distances/        Euclidean distance, the k-nearest search, and the neighbour graph built on it
 python/             development only - never ships, never installed by a user
   fixtures/         scikit-learn reference fixtures for the C# tests
 tests/              xunit; runs anywhere, no Rhino needed

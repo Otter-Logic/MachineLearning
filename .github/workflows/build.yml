@@ -11,9 +11,9 @@ name: build
 # follows Core rather than any need of this code. The test project sets
 # RollForward=LatestMajor, so it runs on whatever the runner has.
 #
-# Core is checked out so the project reference resolves. Once it is published on
-# nuget.org, that checkout can go and the build will fall through to the pinned
-# package instead.
+# Core and Graphs are checked out so the project references resolve. Once they
+# are published on nuget.org, those checkouts can go and the build will fall
+# through to the pinned packages instead.
 #
 # The cross-repo checkout authenticates with OTTER_CI_TOKEN, a PAT with read
 # access to Otter-Logic. The automatic GITHUB_TOKEN is scoped to the one
@@ -41,6 +41,15 @@ jobs:
         with:
           repository: Otter-Logic/Core
           path: Core
+          token: ${{ secrets.OTTER_CI_TOKEN }}
+
+      # Graphs sits beside Core under MachineLearning, which references it - so it
+      # has to be on disk wherever MachineLearning is, named or not. Miss it and
+      # restore fails with NU1101 for OtterLogic.Graphs.
+      - uses: actions/checkout@v4
+        with:
+          repository: Otter-Logic/Graphs
+          path: Graphs
           token: ${{ secrets.OTTER_CI_TOKEN }}
 
       - uses: actions/setup-dotnet@v4

@@ -9,7 +9,7 @@
 
     <IsPackable>true</IsPackable>
     <PackageId>OtterLogic.MachineLearning</PackageId>
-    <Description>The shared base under the OtterLogic machine learning repos - feature preprocessing, decomposition, the graph contract and the dataset contract, with ONNX inference to follow.</Description>
+    <Description>The shared base under the OtterLogic machine learning repos - feature preprocessing, decomposition, distances and the dataset contract, with ONNX inference to follow.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Otter-Logic/MachineLearning</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Otter-Logic/MachineLearning</RepositoryUrl>
@@ -33,6 +33,23 @@
     <Otherwise>
       <ItemGroup>
         <PackageReference Include="OtterLogic.Core" Version="[$(Version)]" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+
+  <!-- Graphs holds the graph contract and sits beside Core, below this layer.
+       Referenced here rather than by each consumer so that everything above gets
+       WeightedGraph the way it always did - through this project - and only one
+       csproj knows where it lives. -->
+  <Choose>
+    <When Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\Graphs\src\OtterLogic.Graphs\OtterLogic.Graphs.csproj')">
+      <ItemGroup>
+        <ProjectReference Include="..\..\..\Graphs\src\OtterLogic.Graphs\OtterLogic.Graphs.csproj" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="OtterLogic.Graphs" Version="[$(Version)]" />
       </ItemGroup>
     </Otherwise>
   </Choose>

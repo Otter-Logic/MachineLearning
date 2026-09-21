@@ -3,8 +3,8 @@
 ## Where this sits
 
 ```
-                    OtterLogic.Core
-              small, stable, slow-moving
+          OtterLogic.Core      OtterLogic.Graphs
+       small, stable, slow-moving; neither references the other
                           ↑
               OtterLogic.MachineLearning          ← this repo
         the shared base every paradigm needs
@@ -31,8 +31,17 @@ test: it would drag a native ONNX runtime into the foundation every domain
 compiles against whether or not it does any inference, and turn Core into the
 grab-bag it is meant not to be.
 
-So this sits between the two. It references Core; the paradigm repos above
-reference it; it references none of them. One-way, so there is still no cycle.
+So this sits between the two. It references Core and Graphs; the paradigm repos
+above reference it; it references none of them. One-way, so there is still no
+cycle.
+
+Graphs is a foundation beside Core rather than part of this layer for the mirror
+image of the reason above. The graph contract and the algorithms over it - a
+route, a flow, a cut vertex - began here because spectral clustering was their
+first user, but none of them learns anything, and a toolkit ordering a toolpath
+or routing a duct should not need a machine learning library to get them. What
+stayed is `NeighbourGraph`, the one constructor that measures a distance between
+samples.
 
 ## What this repo is, and what it is not
 
@@ -43,7 +52,7 @@ needs and nothing else:
 |---|---|---|
 | `Preprocessing` | `FeaturePipeline` — log1p, standardisation, weights, the constant-column check, and the inverse of all of it | every paradigm scales its features |
 | `Decomposition` | `PrincipalComponents`, the `SymmetricEigen` Jacobi solver under it, and `LeadingEigen` for large sparse operators | PCA is a preprocessing step for a regressor as readily as it is an unsupervised tool; a spectral embedding is as useful to a graph network as to a clustering |
-| `Graphs` | `WeightedGraph` — sparse weighted edges, the nearest-neighbour graph, the normalised propagation operator | spectral clustering and message passing in Unsupervised read it today; a trained graph network in DeepLearning will read the same thing |
+| `Distances` | `Euclidean`, the exact k-nearest search, and `NeighbourGraph` — the nearest-neighbour graph of a sample matrix, returned as Graphs' `WeightedGraph` | every paradigm measures a distance; the graph type itself and the algorithms over it live below this layer in Graphs, because a toolkit wants a route or a flow with no learning involved |
 | `Data` | `DatasetSchema`, `Dataset`, `DatasetFolder` — one CSV per model beside a `schema.json` — and `GroupSplit`; the sweep recorder is still planned | a supervised sweep and an RL rollout both need somewhere to put rows, and every paradigm that scores itself needs the split to be by group |
 | `Inference` *(planned)* | ONNX load, the sidecar column-order assertion, tensor marshalling | every learned model, whatever trained it, comes back the same way |
 

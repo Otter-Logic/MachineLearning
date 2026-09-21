@@ -1,5 +1,6 @@
+using OtterLogic.Graphs;
 using OtterLogic.MachineLearning.Decomposition;
-using OtterLogic.MachineLearning.Graphs;
+using OtterLogic.MachineLearning.Distances;
 using Xunit;
 
 namespace OtterLogic.MachineLearning.Tests;
@@ -30,7 +31,7 @@ public sealed class LeadingEigenTests
     public void MatchesADenseDecompositionOfAGraphOperator()
     {
         var fixture = Fixture.Load("graph");
-        var graph = WeightedGraph.NearestNeighbours(fixture.Matrix("x"), fixture.Int("neighbours"));
+        var graph = NeighbourGraph.Of(fixture.Matrix("x"), fixture.Int("neighbours"));
         var expected = fixture.Section("expected").Vector("leading_values");
         var multiply = ShiftedNormalisedAdjacency(graph);
 
@@ -120,7 +121,7 @@ public sealed class LeadingEigenTests
     public void IsDeterministicForAGivenSeed()
     {
         var fixture = Fixture.Load("graph");
-        var graph = WeightedGraph.NearestNeighbours(fixture.Matrix("x"), fixture.Int("neighbours"));
+        var graph = NeighbourGraph.Of(fixture.Matrix("x"), fixture.Int("neighbours"));
         var multiply = ShiftedNormalisedAdjacency(graph);
 
         var first = LeadingEigen.Solve(graph.NodeCount, multiply, 4, seed: 5);
