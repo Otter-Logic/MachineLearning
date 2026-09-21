@@ -68,7 +68,14 @@ of a graph's traffic passes through each node — betweenness by hop count, exac
 to a couple of thousand nodes and estimated from evenly spread sources beyond — and
 `CutVertices` how much of a graph each node alone holds on. Both are readings of a
 graph that a clustering uses as features and a trained network would use as
-inputs, so they sit beside the graph rather than above it.
+inputs, so they sit beside the graph rather than above it. `PotentialFlow` answers
+the question a route cannot — not which way is nearest but how much passes through
+here — by solving the graph Laplacian with some nodes grounded: equal routes share
+the flow, so a symmetric graph gets a symmetric answer, where a route search has
+to break the tie one way and make mirror-image nodes differ. `Condensation` ranks
+the nodes of a directed graph by what they depend on, folding every cycle into one
+component first, since dependence that runs both ways is not a hierarchy and
+forcing an order onto it would only record which arc the search met first.
 
 **Data** — the dataset contract. A `DatasetSchema` says which columns a table has,
 in which order, for what, and which version of the feature code produced them; a
