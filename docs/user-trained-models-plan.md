@@ -4,6 +4,9 @@ Decided 2026-09-20. Status: **phase 0 built** the same day — the dataset contr
 here, the three baselines and the scores in Supervised, ten components in Rhino3D.
 Compiled and unit-tested; not yet run inside Grasshopper. Phases 1 to 4 are
 planned. See [What phase 0 turned out to be](#what-phase-0-turned-out-to-be).
+Phase 1 is broken down in
+[user-trained-models-phase-1.md](user-trained-models-phase-1.md), which
+supersedes this file's phase 1 rows where the two differ.
 
 The aim is a set of Grasshopper components that let an end user feed in their own
 data, train their own model on their own machine, and use it inside Grasshopper —
@@ -235,17 +238,20 @@ every paradigm does before its method. The methods and their scores sit under
 | Panel | Tier | Components | Built |
 |---|---|---|---|
 | Machine Learning | Data | Write Dataset · Read Dataset · Split By Group | phase 0 |
-| Machine Learning | Inference | Load Model · Predict (label and confidence) | phase 1 |
-| Machine Learning | Setup | ML Environment (runtime present, version, CPU or GPU, install, install from file) | phase 1 |
+| Machine Learning | Inference | Predict (class or value, confidence, feature names, report) | phase 1 |
 | Supervised Learning | Methods | Nearest Neighbour Classifier · Nearest Neighbour Regressor · Ridge Regression · Logistic Regression | phase 0 |
-| Supervised Learning | Methods | Train Classifier · Train Regressor | phase 1 |
+| Supervised Learning | Methods | Train (one component; task from the schema; runtime install on its menu) | phase 1 |
+| Supervised Learning | Dropdowns | Model Type | phase 1 |
 | Supervised Learning | Evaluation | Evaluate Classification · Evaluate Regression | phase 0 |
 
 An earlier draft of this table put the dataset components under Supervised
 Learning and had separate Build and Summary components. Build folded into Write —
 a table is validated whether or not it is written, so the Write toggle is the only
 difference — and Summary became the Report output of both Write and Read, so it is
-seen without being asked for.
+seen without being asked for. The phase 1 rows were cut down on 2026-09-23 —
+Load Model folded into Predict, ML Environment into Train's context menu, the two
+Train components into one, and the sidecar into the `.onnx` itself. The reasons
+are in [user-trained-models-phase-1.md](user-trained-models-phase-1.md).
 
 Train never blocks the canvas: it launches the trainer process, polls the
 progress file, and expires its own solution when the job ends. It is driven by a
@@ -272,8 +278,11 @@ still come back empty.
 0. **Dataset contract, C# baselines, Evaluate.** No Python, no ONNX. Gives
    `Supervised` its first real algorithm, gives LunchBox-style fit-and-predict on
    day one, and sets the baseline every trained model must beat.
-1. **Inference project, Python trainer (boosted trees and an MLP), runtime
-   bundle and install, Train and Predict.** Proven on the sweep surrogate.
+1. **The model contract, then Predict, then Train, then the runtime install** —
+   in that order, so that a model trained from a terminal is usable in
+   Grasshopper before the trainer or its bundle exist. Boosted trees and an MLP.
+   Proven on the sweep surrogate. Broken down in
+   [user-trained-models-phase-1.md](user-trained-models-phase-1.md).
 2. **Member Features, the end-release worked example, QA by disagreement.** Then
    section group, once its canonical target is settled.
 3. **DeepLearning: a GNN node classifier on the element graph, then the

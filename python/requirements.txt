@@ -1,16 +1,22 @@
-# Development only. Nothing here ships, and no user of the plug-in installs
-# Python: the clustering pipeline is C# end to end. scikit-learn is here purely
-# as a reference implementation to test that C# against, and numpy/pandas for
-# generating and inspecting fixture data.
+# Development environment for this repo. Nothing here ships inside the plug-in.
 #
-# Once GraphSAGE lands, torch joins this list and the one artefact that crosses
-# into the plug-in is a .onnx file dropped into /models.
+# scikit-learn is a reference implementation to test the C# against; numpy and
+# pandas generate and inspect fixture data. The ONNX packages are for the trainer
+# under trainer/ and for the inference parity fixtures it produces - install the
+# trainer itself with `pip install -e trainer[test]`.
+#
+# A user of the plug-in installs none of this. Predict needs nothing beyond
+# OtterLogic; Train needs the trainer runtime, which is a private bundle of the
+# same packages that the plug-in fetches on request (phase 1, step 4).
 
 numpy>=1.26
 pandas>=2.2
 scikit-learn>=1.5
 
-# Uncomment when graph work starts.
+skl2onnx>=1.17          # scikit-learn -> ONNX
+onnx>=1.16
+onnxruntime>=1.18       # runs the export back, so a bad conversion fails here and not in Rhino
+pytest>=8
+
+# Joins the list when the DeepLearning trainer modules arrive.
 # torch>=2.3
-# onnx>=1.16
-# onnxruntime>=1.18

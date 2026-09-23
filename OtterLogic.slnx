@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/OtterLogic.MachineLearning/OtterLogic.MachineLearning.csproj" />
+    <Project Path="src/OtterLogic.MachineLearning.Inference/OtterLogic.MachineLearning.Inference.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/OtterLogic.MachineLearning.Tests/OtterLogic.MachineLearning.Tests.csproj" />
+    <Project Path="tests/OtterLogic.MachineLearning.Inference.Tests/OtterLogic.MachineLearning.Inference.Tests.csproj" />
   </Folder>
 </Solution>

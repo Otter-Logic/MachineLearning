@@ -1,48 +1,58 @@
 # Python
 
-**No user of the plug-in installs any of this.** Not IronPython, not Rhino 8's
-embedded CPython, not a system interpreter. Everything here runs on a developer's
-machine and stops there; everything that ships is C# end to end.
+Two jobs, and a user of the plug-in installs neither of them by hand.
 
-Two jobs, present and future.
+- **Reference fixtures** — scikit-learn as a *reference implementation to test
+  the C# against*, never as a dependency. Development only.
+- **The trainer** — `trainer/`, the process behind the Train component. It ships
+  as a private bundle the plug-in fetches on request; nothing here is installed
+  into a Python the user already has, and Predict needs none of it.
 
-## Today: reference fixtures
+That second job retired a sentence this file used to open with: it is no longer
+true that nothing Python ever reaches a user's machine. What is still true is
+that nothing Python runs *inside Rhino*, and that a user who only receives models
+and runs them installs nothing beyond OtterLogic.
 
-scikit-learn is here as a *reference implementation to test the C# against*, not
-as a dependency. `fixtures/make_fixtures.py` writes JSON into the test project;
-the C# tests assert against it.
+## Setup
 
 ```
 py -3.12 -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-python fixtures/make_fixtures.py
+pip install -e trainer[test]
 ```
 
-Commit the JSON it produces. Regenerate it when the fixture data or the
-comparison changes — not on every run, or the tests are asserting against
-whatever was generated last rather than against a fixed reference.
+## Fixtures
 
-What is generated here is the decomposition fixtures — **`pca_plain.json`** and
-**`pca_whiten.json`**. PCA is deterministic up to a sign, so this is a straight
-exactness check: the C# should match scikit-learn to machine precision once the
-component signs are put in a canonical order.
+```
+python fixtures/make_fixtures.py             # decomposition: pca_plain.json, pca_whiten.json
+python fixtures/make_inference_fixtures.py   # inference parity: classifier.onnx, regressor.onnx, inference.json
+```
 
-The clustering fixtures — `em_*.json`, `quality.json`, `sweep.json` — moved to
-[Unsupervised](https://github.com/Otter-Logic/Unsupervised) along with the
-algorithms they test. Both generators still build their input from the same
-`make_members`, which is why the two files look alike at the top.
+Commit what they produce. Regenerate only when the fixture data or the comparison
+changes — not on every run, or the tests assert against whatever was generated
+last rather than against a fixed reference.
 
-## Later: training
+The decomposition fixtures are a straight exactness check: PCA is deterministic
+up to a sign, so the C# should match scikit-learn to machine precision once the
+component signs are in a canonical order. The clustering fixtures moved to
+[Unsupervised](https://github.com/Otter-Logic/Unsupervised) with the algorithms.
 
-When learned models arrive — GraphSAGE first — this is where they get trained,
-and `torch` joins `requirements.txt`. The one artefact that crosses into the
-plug-in is a `.onnx` file dropped into `/models`, with a sidecar `.json`
-recording feature order and normalisation. Training never runs inside Rhino; see
-`Rhino3D/docs/machine-learning.md`.
+The inference fixtures are the contract across the ONNX boundary. The trainer
+trains two small models and records what onnxruntime in Python answers for a few
+probe rows; the C# tests open the same files and must answer the same, to float32
+tolerance. A metadata key renamed on one side only, or an output that changed
+shape, fails here rather than in a user's definition.
 
-Note the asymmetry, because it is the whole design: a *learned* model has weights
-that had to be found from data the user does not have, so it must be trained here
-and shipped. A Gaussian mixture has no such weights — it computes its parameters
-from whatever is on the wire, every solve — so it is C#, and nothing about it
-comes through this directory.
+## The trainer
+
+See [trainer/README.md](trainer/README.md) for the job and progress protocol,
+the four learners, pointing the plug-in at this checkout with `OTTERLOGIC_TRAINER`,
+and `build-bundle.ps1`, which makes the zip a user's plug-in installs. Its own
+tests run with `pytest trainer`.
+
+Note the asymmetry the whole design rests on: a *learned* model has weights that
+had to be found from data, so it is trained here, out of process, and crosses
+into the plug-in as one `.onnx` file. A Gaussian mixture has no such weights — it
+computes its parameters from whatever is on the wire, every solve — so it is C#,
+and nothing about it comes through this directory.

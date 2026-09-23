@@ -80,13 +80,31 @@ group, and curating the set is deleting a file. The schema is checked on every
 write, which is what stops the twentieth model going in with two columns swapped.
 `GroupSplit` holds back whole groups for testing and deliberately offers no split
 by row: rows from one model are near-copies of each other, and a score from a
-random split measures recognition rather than prediction. The sweep recorder is
-still to come. See [docs/user-trained-models-plan.md](docs/user-trained-models-plan.md).
+random split measures recognition rather than prediction. See
+[docs/user-trained-models-plan.md](docs/user-trained-models-plan.md).
 
-**Inference** *(planned)* — a separate project, because it is the one genuine
-dependency seam. `Microsoft.ML.OnnxRuntime` has native binaries, and a toolkit
-doing nothing but k-means should not drag them onto a test runner. Model loading,
-the sidecar column-order assertion, and tensor marshalling go here.
+**Training** — the protocol between the Train component and the trainer process:
+`TrainingJob` is the `job.json` a run starts from, and a `Learner` — boosted trees,
+a neural network, a linear model or nearest neighbours, each with the few settings
+a person would expect to set — is the method in it; `TrainerProgress` is one line
+of the `progress.jsonl` it reports through; `TrainerProcess` starts the process and
+polls the file without ever waiting on it, writing wired samples into a folder
+first through `SampleFolder` when they did not come from one; and `TrainerRuntime`
+finds the private Python it runs in, or installs one from a release bundle.
+Nothing here references Grasshopper, so it is tested by running the real trainer
+from xunit. The trainer itself is `python/trainer/`, and `build-bundle.ps1` beside
+it makes the runtime a user installs.
+
+**Inference** — `OtterLogic.MachineLearning.Inference`, a separate project because
+it is the one genuine dependency seam: `Microsoft.ML.OnnxRuntime` has native
+binaries, and a toolkit doing nothing but k-means should not drag them onto a
+test runner. `OnnxModel` opens a model file and answers for rows; `ModelMetadata`
+is what the file says about itself — features in order, target, classes, how it
+scored — carried *inside* the `.onnx` under one `metadata_props` key rather than
+in a sidecar, so a model is one file and cannot arrive incomplete. The graph
+interface is fixed (`features` in; `value`, or `label` and `probabilities`, out),
+which is what lets scikit-learn today and PyTorch later sit behind one reader. See
+[docs/user-trained-models-phase-1.md](docs/user-trained-models-phase-1.md).
 
 ## What is deliberately not here
 
@@ -107,7 +125,7 @@ This is the distinction the repo is organised around.
 |---|---|---|
 | Example | Gaussian mixture, PCA | GraphSAGE |
 | Where do the parameters come from? | the data on the wire | gradient descent over a corpus |
-| Is there anything to ship? | **no** | `.onnx` + sidecar |
+| Is there anything to ship? | **no** | one `.onnx`, carrying its own metadata |
 | Language at runtime | C# only | C# inference, Python training |
 | Crosses the ONNX boundary? | **never** | always |
 
@@ -123,10 +141,14 @@ src/OtterLogic.MachineLearning/
   Decomposition/    PCA, the symmetric eigensolver, the leading-eigenvector solver
   Shapes/           outlines in, a learned row of numbers per outline out
   Distances/        Euclidean distance, the k-nearest search, and the neighbour graph built on it
-python/             development only - never ships, never installed by a user
-  fixtures/         scikit-learn reference fixtures for the C# tests
+  Data/             the dataset contract: schema, table, folder on disk, split by group
+  Training/         the job and progress protocol, the process launcher, runtime discovery
+src/OtterLogic.MachineLearning.Inference/
+                    ONNX Runtime behind OnnxModel and ModelMetadata - the one project with natives
+python/
+  fixtures/         scikit-learn reference fixtures for the C# tests, and the inference parity fixtures
+  trainer/          otterlogic_trainer, the process behind Train; ships as a private bundle
 tests/              xunit; runs anywhere, no Rhino needed
-models/             .onnx artefacts, once there are learned models
 docs/               architecture and design notes
 ```
 
@@ -135,6 +157,7 @@ docs/               architecture and design notes
 None today, deliberately. A small symmetric eigensolve is sixty lines of Jacobi
 rotation and a large sparse one a filtered subspace iteration, neither worth
 carrying MathNet for.
-`Microsoft.ML.OnnxRuntime` arrives with the Inference project, and that one is
-unavoidable — leave `ExcludeAssets="runtime"` off it, unlike RhinoCommon, because
-its native binaries genuinely must sit next to the `.gha`.
+`Microsoft.ML.OnnxRuntime` is the one exception, confined to the Inference
+project — leave `ExcludeAssets="runtime"` off it, unlike RhinoCommon, because its
+native binaries genuinely must sit next to the `.gha`, and the Grasshopper
+project copies them up from `runtimes/win-x64/native` for exactly that reason.

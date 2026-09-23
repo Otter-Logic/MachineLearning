@@ -9,7 +9,7 @@
 
     <IsPackable>true</IsPackable>
     <PackageId>OtterLogic.MachineLearning</PackageId>
-    <Description>The shared base under the OtterLogic machine learning repos - feature preprocessing, decomposition, distances and the dataset contract, with ONNX inference to follow.</Description>
+    <Description>The shared base under the OtterLogic machine learning repos - feature preprocessing, decomposition, distances and the dataset contract, and the training job protocol. ONNX inference is the sibling Inference project.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Otter-Logic/MachineLearning</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Otter-Logic/MachineLearning</RepositoryUrl>
@@ -17,11 +17,19 @@
 
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- The tests reach TrainerRuntime.InstallRootOverride and nothing else; it
+         exists so an install test can unpack into a temporary folder instead of
+         the %LOCALAPPDATA% folder a user's real runtime lives in. -->
+    <InternalsVisibleTo Include="OtterLogic.MachineLearning.Tests" />
+  </ItemGroup>
+
   <!-- Deliberately no package references. A Jacobi eigensolve for small
        matrices and a filtered subspace iteration for large sparse ones are a few
        hundred lines between them; MathNet would be carried for arithmetic that
-       is already here. Revisit when ONNX inference lands, which does need
-       Microsoft.ML.OnnxRuntime. -->
+       is already here. The one dependency the stack does need,
+       Microsoft.ML.OnnxRuntime, lives in the sibling Inference project so that
+       its native binaries never reach a consumer that only wants this. -->
 
   <!-- A sibling checkout of Core wins; the published package is the fallback. -->
   <Choose>

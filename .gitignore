@@ -7,3 +7,11 @@ obj/
 python/.venv/
 __pycache__/
 *.pyc
+
+# pip install -e trainer writes these beside the package.
+*.egg-info/
+.pytest_cache/
+
+# build-bundle.ps1 writes the runtime zip and its manifest here; they go on a
+# GitHub release, never into the repo.
+python/trainer/dist/

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>OtterLogic.MachineLearning.Inference</RootNamespace>
+    <AssemblyName>OtterLogic.MachineLearning.Inference</AssemblyName>
+    <!-- Its own project rather than a namespace, for one reason: this is the only
+         part of the stack whose dependency ships native binaries. Kept apart so
+         that a toolkit doing nothing but k-means - and its test runner - never
+         loads them. See docs/user-trained-models-phase-1.md. -->
+
+    <IsPackable>true</IsPackable>
+    <PackageId>OtterLogic.MachineLearning.Inference</PackageId>
+    <Description>Runs trained OtterLogic models - an .onnx carrying its own metadata - through ONNX Runtime.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Otter-Logic/MachineLearning</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Otter-Logic/MachineLearning</RepositoryUrl>
+    <PackageTags>rhino;rhino3d;grasshopper;computational-design;machine-learning;onnx</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- No ExcludeAssets="runtime", unlike RhinoCommon: the native onnxruntime.dll
+         under runtimes/win-x64/native genuinely has to reach the folder the .gha
+         loads from. The Grasshopper project copies it up beside the .gha. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.30.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OtterLogic.MachineLearning\OtterLogic.MachineLearning.csproj" />
+  </ItemGroup>
+
+</Project>
