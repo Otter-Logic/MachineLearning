@@ -1,4 +1,4 @@
-"""Reads a dataset folder the way ``OtterLogic.MachineLearning.Data.DatasetFolder`` writes it.
+"""Reads a dataset folder the way ``OtterLogic.Dataset.Data.DatasetFolder`` writes it.
 
 A folder is ``schema.json`` and one CSV per model under ``models/``. The checks here
 are the C# reader's checks, because a file the plug-in would refuse must be refused

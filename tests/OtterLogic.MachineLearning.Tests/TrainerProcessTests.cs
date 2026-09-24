@@ -1,5 +1,5 @@
 using System.Globalization;
-using OtterLogic.MachineLearning.Data;
+using OtterLogic.Dataset.Data;
 using OtterLogic.MachineLearning.Training;
 using Xunit;
 using Xunit.Abstractions;
@@ -58,7 +58,7 @@ public class TrainerProcessTests : IDisposable
     }
 
     /// <summary>Fifty rows of a made-up sweep for one model, offset a little by its index so models differ.</summary>
-    private static Dataset Sweep(Random rng, int g, bool classes, string? group)
+    private static SampleTable Sweep(Random rng, int g, bool classes, string? group)
     {
         const int n = 50;
         var features = new double[n, 3];
@@ -85,11 +85,11 @@ public class TrainerProcessTests : IDisposable
         string[]? groups = group is null ? null : Enumerable.Repeat(group, n).ToArray();
 
         return classes
-            ? Dataset.Create(schema, features,
+            ? SampleTable.Create(schema, features,
                 new Dictionary<string, double[]>(),
                 new Dictionary<string, string[]> { ["stiff"] = labels },
                 ids: null, groups: groups)
-            : Dataset.Create(schema, features,
+            : SampleTable.Create(schema, features,
                 new Dictionary<string, double[]> { ["deflection"] = numbers },
                 new Dictionary<string, string[]>(),
                 ids: null, groups: groups);
@@ -106,7 +106,7 @@ public class TrainerProcessTests : IDisposable
     }
 
     /// <summary>Four models' worth of rows on one wire, with or without the group each came from.</summary>
-    private static (Dataset dataset, string[]? groups) Samples(bool classes, bool withGroups)
+    private static (SampleTable dataset, string[]? groups) Samples(bool classes, bool withGroups)
     {
         var rng = new Random(3);
         var parts = Enumerable.Range(0, 4)
@@ -135,8 +135,8 @@ public class TrainerProcessTests : IDisposable
         }
 
         var dataset = classes
-            ? Dataset.Create(parts[0].Schema, features, null, new Dictionary<string, string[]> { ["stiff"] = labels })
-            : Dataset.Create(parts[0].Schema, features, new Dictionary<string, double[]> { ["deflection"] = numbers }, null);
+            ? SampleTable.Create(parts[0].Schema, features, null, new Dictionary<string, string[]> { ["stiff"] = labels })
+            : SampleTable.Create(parts[0].Schema, features, new Dictionary<string, double[]> { ["deflection"] = numbers }, null);
 
         return (dataset, withGroups ? groups : null);
     }

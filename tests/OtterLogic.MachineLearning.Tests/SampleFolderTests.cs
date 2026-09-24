@@ -1,4 +1,4 @@
-using OtterLogic.MachineLearning.Data;
+using OtterLogic.Dataset.Data;
 using OtterLogic.MachineLearning.Training;
 using Xunit;
 
@@ -16,7 +16,7 @@ public class SampleFolderTests : IDisposable
     }
 
     /// <summary>Five rows, one number target, the group column as given.</summary>
-    private static Dataset Samples(string[]? groups = null)
+    private static SampleTable Samples(string[]? groups = null)
     {
         var schema = new DatasetSchema
         {
@@ -31,7 +31,7 @@ public class SampleFolderTests : IDisposable
             y[i] = 2 * i;
         }
 
-        return Dataset.Create(schema, features, new Dictionary<string, double[]> { ["y"] = y }, null, ids: null, groups: groups);
+        return SampleTable.Create(schema, features, new Dictionary<string, double[]> { ["y"] = y }, null, ids: null, groups: groups);
     }
 
     [Fact]

@@ -9,7 +9,7 @@
 
     <IsPackable>true</IsPackable>
     <PackageId>OtterLogic.MachineLearning</PackageId>
-    <Description>The shared base under the OtterLogic machine learning repos - feature preprocessing, decomposition, distances and the dataset contract, and the training job protocol. ONNX inference is the sibling Inference project.</Description>
+    <Description>The shared base under the OtterLogic machine learning repos - feature preprocessing, decomposition, distances and the training job protocol; the dataset contract is the sibling Dataset package. ONNX inference is the sibling Inference project.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Otter-Logic/MachineLearning</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Otter-Logic/MachineLearning</RepositoryUrl>
@@ -41,6 +41,23 @@
     <Otherwise>
       <ItemGroup>
         <PackageReference Include="OtterLogic.Core" Version="[$(Version)]" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+
+  <!-- Dataset holds the dataset contract - schema, sample table, folder on disk,
+       split by group - and the delimited text under it. It sat in this project
+       as Data/ until 2026-09, when a repo one layer down existed to hold it; it
+       moved for the same reason anything two paradigms need moves down. -->
+  <Choose>
+    <When Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\Dataset\src\OtterLogic.Dataset\OtterLogic.Dataset.csproj')">
+      <ItemGroup>
+        <ProjectReference Include="..\..\..\Dataset\src\OtterLogic.Dataset\OtterLogic.Dataset.csproj" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="OtterLogic.Dataset" Version="[$(Version)]" />
       </ItemGroup>
     </Otherwise>
   </Choose>

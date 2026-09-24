@@ -1,4 +1,4 @@
-using OtterLogic.MachineLearning.Data;
+using OtterLogic.Dataset.Data;
 
 namespace OtterLogic.MachineLearning.Training;
 
@@ -30,7 +30,7 @@ public static class SampleFolder
     /// name has those characters replaced.
     /// </param>
     /// <returns>The model IDs written, in the order first met.</returns>
-    public static IReadOnlyList<string> Write(string folder, Dataset dataset, IReadOnlyList<string>? groups = null)
+    public static IReadOnlyList<string> Write(string folder, SampleTable dataset, IReadOnlyList<string>? groups = null)
     {
         ArgumentNullException.ThrowIfNull(dataset);
         if (string.IsNullOrWhiteSpace(folder))

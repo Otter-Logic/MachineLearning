@@ -52,6 +52,15 @@ jobs:
           path: Graphs
           token: ${{ secrets.OTTER_CI_TOKEN }}
 
+      # Dataset sits beside Core and Graphs under MachineLearning, which references
+      # it - the dataset contract moved down there in 2026-09. Same rule as Graphs:
+      # miss it and restore fails with NU1101 for OtterLogic.Dataset.
+      - uses: actions/checkout@v4
+        with:
+          repository: Otter-Logic/Dataset
+          path: Dataset
+          token: ${{ secrets.OTTER_CI_TOKEN }}
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'

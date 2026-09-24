@@ -141,7 +141,8 @@ src/OtterLogic.MachineLearning/
   Decomposition/    PCA, the symmetric eigensolver, the leading-eigenvector solver
   Shapes/           outlines in, a learned row of numbers per outline out
   Distances/        Euclidean distance, the k-nearest search, and the neighbour graph built on it
-  Data/             the dataset contract: schema, table, folder on disk, split by group
+                    (the dataset contract - schema, sample table, folder on disk, split by
+                    group - moved down to the Dataset repo in 2026-09)
   Training/         the job and progress protocol, the process launcher, runtime discovery
 src/OtterLogic.MachineLearning.Inference/
                     ONNX Runtime behind OnnxModel and ModelMetadata - the one project with natives

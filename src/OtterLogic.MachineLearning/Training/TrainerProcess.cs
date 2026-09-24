@@ -1,3 +1,4 @@
+using OtterLogic.Dataset.Data;
 using System.Diagnostics;
 using System.Text;
 
@@ -146,7 +147,7 @@ public sealed class TrainerProcess : IDisposable
     /// say in its report that the score may be optimistic.
     /// </para>
     /// </summary>
-    /// <param name="dataset">The rows, with one target. <see cref="Data.Dataset.FromColumns"/> builds one from wires.</param>
+    /// <param name="dataset">The rows, with one target. <see cref="SampleTable.FromColumns"/> builds one from wires.</param>
     /// <param name="groups">One per row, or null; the model each row came from, for the holdout.</param>
     /// <param name="learner">The method to fit.</param>
     /// <param name="holdoutFraction">Share of groups, or rows, held back to score on.</param>
@@ -157,7 +158,7 @@ public sealed class TrainerProcess : IDisposable
     /// <exception cref="ArgumentException">The samples, the learner or the interpreter is wrong.</exception>
     /// <exception cref="InvalidOperationException">The process could not be started.</exception>
     public static TrainerProcess StartOnSamples(
-        Data.Dataset dataset, IReadOnlyList<string>? groups, Learner learner, double holdoutFraction,
+        SampleTable dataset, IReadOnlyList<string>? groups, Learner learner, double holdoutFraction,
         string outputPath, string python, int seed = 1, string? workFolder = null)
     {
         ArgumentNullException.ThrowIfNull(dataset);
