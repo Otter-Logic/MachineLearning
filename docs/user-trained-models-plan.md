@@ -1,5 +1,10 @@
 # User-trained models — plan
 
+> **Superseded in part, 2026-09-25.** The Python trainer, its runtime bundle and the
+> `job.json` / `progress.jsonl` protocol described here were built and then taken out;
+> OtterTrain now fits its learners in C#. The ONNX contract stands. See
+> [in-process-training.md](in-process-training.md) for the decision and the reasons.
+
 Decided 2026-09-20. Status: **phase 0 built** the same day — the dataset contract
 here, the three baselines and the scores in Supervised, ten components in Rhino3D.
 Compiled and unit-tested; not yet run inside Grasshopper. Phases 1 to 4 are

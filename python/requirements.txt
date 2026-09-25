@@ -1,22 +1,21 @@
-# Development environment for this repo. Nothing here ships inside the plug-in.
+# Development environment for this repo. Nothing here ships inside the plug-in,
+# and a user of the plug-in installs none of it.
 #
 # scikit-learn is a reference implementation to test the C# against; numpy and
-# pandas generate and inspect fixture data. The ONNX packages are for the trainer
-# under trainer/ and for the inference parity fixtures it produces - install the
-# trainer itself with `pip install -e trainer[test]`.
+# pandas generate and inspect fixture data. skl2onnx, onnx and onnxruntime make
+# the inference parity fixtures: models written by tools that are not OtterLogic,
+# which the C# reader must answer for exactly as onnxruntime in Python does.
 #
-# A user of the plug-in installs none of this. Predict needs nothing beyond
-# OtterLogic; Train needs the trainer runtime, which is a private bundle of the
-# same packages that the plug-in fetches on request (phase 1, step 4).
+# torch is optional. When it is importable the external-model fixture is exported
+# by torch.onnx; when it is not, onnx.helper builds the same graph shape.
 
 numpy>=1.26
 pandas>=2.2
 scikit-learn>=1.5
 
-skl2onnx>=1.17          # scikit-learn -> ONNX
+skl2onnx>=1.17
 onnx>=1.16
-onnxruntime>=1.18       # runs the export back, so a bad conversion fails here and not in Rhino
+onnxruntime>=1.18
 pytest>=8
 
-# Joins the list when the DeepLearning trainer modules arrive.
 # torch>=2.3

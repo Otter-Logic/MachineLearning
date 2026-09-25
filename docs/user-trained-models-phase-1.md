@@ -1,5 +1,10 @@
 # Phase 1 — create and use an ONNX model
 
+> **Superseded in part, 2026-09-25.** The Python trainer, its runtime bundle and the
+> `job.json` / `progress.jsonl` protocol described here were built and then taken out;
+> OtterTrain now fits its learners in C#. The ONNX contract stands. See
+> [in-process-training.md](in-process-training.md) for the decision and the reasons.
+
 Decided 2026-09-23. Status: **steps 1 to 3 built** the same day — the contract,
 Predict and Train, with the trainer package and its tests; **step 4 built except
 for cutting the release** — the bundle build script, the install API and its tests
@@ -356,3 +361,19 @@ python-build-standalone 3.12, `pip install`s the checkout into it, and writes th
 manifest; the trainer answers `--version` so the build, and later an installer,
 can prove a runtime works without a job. What remains is to run the script and
 attach what it writes to a release tagged `trainer-v<version>`.
+
+**Train's Model input became Folder and Name** on 2026-09-24, after the first
+use in Grasshopper: one path box invites a name with no folder, or a folder with
+no name, and neither is caught until the trainer has run and failed to write.
+`Training/ModelFile.cs` turns the pair into the path — `.onnx` appended when it
+is missing, a separator in the name refused, the folder created as Write Dataset
+creates its own — so both front-ends read the two the same way. OtterPredict
+still takes one path, because reading a file that exists is a different act
+from naming one that does not.
+
+**The install's 404 is now explained.** Until a release carries the manifest,
+"Install training runtime" fails at `ManifestUrl`, and the message said only
+that a status code was not success. It now says that no runtime has been
+released yet and names the two ways to train without one: the bundle built by
+`build-bundle.ps1` through "Install training runtime from file…", or
+`OTTERLOGIC_TRAINER` pointed at a checkout's virtual environment.

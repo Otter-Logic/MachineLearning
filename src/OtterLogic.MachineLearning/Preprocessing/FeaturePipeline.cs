@@ -48,6 +48,27 @@ public sealed class FeaturePipeline
     public int[] KeptColumns { get; }
 
     /// <summary>
+    /// The value subtracted from every input column before scaling, one per input
+    /// column, dropped ones included. With <see cref="LogTransform"/> on it is the
+    /// mean of log(1 + x). Read by anything that bakes this transform into a graph
+    /// of its own — an ONNX export writes it as constants so a model carries its
+    /// own standardisation and a reader never has to repeat it.
+    /// </summary>
+    public IReadOnlyList<double> Centre => _centre;
+
+    /// <summary>The population standard deviation each input column is divided by, one per input column. Near zero for a dropped column, which is why it was dropped.</summary>
+    public IReadOnlyList<double> Scale => _scale;
+
+    /// <summary>The per-column multiplier applied after standardising; one where none was asked for.</summary>
+    public IReadOnlyList<double> Weights => _weights;
+
+    /// <summary>Whether log(1 + x) is applied first. An export has to know, because it is not an affine step.</summary>
+    public bool LogTransform => _logTransform;
+
+    /// <summary>Whether rows are scaled to unit length first. Likewise not affine.</summary>
+    public bool NormaliseRows => _normaliseRows;
+
+    /// <summary>
     /// Fits the transform.
     /// </summary>
     /// <param name="x">n x d raw data.</param>

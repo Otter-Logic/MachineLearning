@@ -9,20 +9,13 @@
 
     <IsPackable>true</IsPackable>
     <PackageId>OtterLogic.MachineLearning</PackageId>
-    <Description>The shared base under the OtterLogic machine learning repos - feature preprocessing, decomposition, distances and the training job protocol; the dataset contract is the sibling Dataset package. ONNX inference is the sibling Inference project.</Description>
+    <Description>The shared base under the OtterLogic machine learning repos - feature preprocessing, decomposition, distances and shape signatures; the dataset contract is the sibling Dataset package, and the ONNX seam - reading a model and writing one - is the sibling Inference project.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Otter-Logic/MachineLearning</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Otter-Logic/MachineLearning</RepositoryUrl>
     <PackageTags>rhino;rhino3d;grasshopper;computational-design;machine-learning</PackageTags>
 
   </PropertyGroup>
-
-  <ItemGroup>
-    <!-- The tests reach TrainerRuntime.InstallRootOverride and nothing else; it
-         exists so an install test can unpack into a temporary folder instead of
-         the %LOCALAPPDATA% folder a user's real runtime lives in. -->
-    <InternalsVisibleTo Include="OtterLogic.MachineLearning.Tests" />
-  </ItemGroup>
 
   <!-- Deliberately no package references. A Jacobi eigensolve for small
        matrices and a filtered subspace iteration for large sparse ones are a few

@@ -4,16 +4,17 @@ using Xunit;
 namespace OtterLogic.MachineLearning.Inference.Tests;
 
 /// <summary>
-/// The parity test across the ONNX boundary. The fixtures were trained and
-/// answered by the Python trainer; the C# side opens the same files and must give
-/// the same answers, to float32 tolerance.
+/// The parity test across the ONNX boundary. The fixtures were written by tools
+/// that are not OtterLogic — scikit-learn through skl2onnx, and a network in the
+/// shape PyTorch exports — and answered by onnxruntime in Python; the C# side
+/// opens the same files and must give the same answers, to float32 tolerance.
 /// </summary>
 public class OnnxModelTests
 {
     private static string Fixture(string name) => Path.Combine(AppContext.BaseDirectory, "Fixtures", name);
 
     private sealed record Expected(
-        string[] Features, double[][] Rows, Classifier Classifier, Regressor Regressor);
+        string[] Features, double[][] Rows, Classifier Classifier, Regressor Regressor, Regressor ExternalMlp);
 
     private sealed record Classifier(int[] Labels, double[][] Probabilities);
 
@@ -75,6 +76,30 @@ public class OnnxModelTests
         Assert.Empty(prediction.Confidence);
         for (int i = 0; i < prediction.SampleCount; i++)
             Assert.Equal(Answers.Regressor.Values[i], prediction.Values[i], 1e-3);
+    }
+
+    /// <summary>
+    /// A network exported by PyTorch, or built the way PyTorch exports one: Gemm
+    /// nodes, a batch dimension, its own input and output names, and no OtterLogic
+    /// metadata. It must still run. This is the promise that a deep-learning model
+    /// trained elsewhere works in OtterPredict, kept now that OtterTrain itself
+    /// trains only in C#.
+    /// </summary>
+    [Fact]
+    public void AModelFromElsewhereWithoutMetadataStillRuns()
+    {
+        using var model = OnnxModel.Load(Fixture("external-mlp.onnx"));
+
+        Assert.False(model.HasMetadata);
+        Assert.Equal(ModelTask.Regression, model.Task);
+        Assert.Equal(4, model.FeatureCount);
+        Assert.Empty(model.FeatureNames);
+        Assert.Contains("from elsewhere", model.Describe()[0]);
+
+        var prediction = model.Predict(Rows());
+        Assert.Equal(Answers.Rows.Length, prediction.SampleCount);
+        for (int i = 0; i < prediction.SampleCount; i++)
+            Assert.Equal(Answers.ExternalMlp.Values[i], prediction.Values[i], 1e-3);
     }
 
     [Fact]

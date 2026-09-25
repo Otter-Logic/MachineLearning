@@ -105,8 +105,11 @@ This is the distinction the whole stack is organised around.
 | Crosses the ONNX boundary? | **never** | always |
 
 One question decides which you are looking at: *are there numbers that had to be
-learned from data the user does not have?* If yes, it is trained in `/python` and
-shipped as a frozen graph. If no, it is an algorithm and it is written in C#.
+learned from data the caller does not have on the wire?* If yes, it is a trained
+model and crosses as a frozen graph — fitted by OtterTrain in C#, or by anything
+elsewhere that writes ONNX. If no, it is an algorithm and it is written in C#.
+Since 2026-09-25 OtterTrain's own learners are C# too; see
+[in-process-training.md](in-process-training.md) for why the Python trainer went.
 
 A Gaussian mixture is emphatically the second kind. Its means, covariances and
 mixing weights are computed from the input by EM, on every solve. There is no

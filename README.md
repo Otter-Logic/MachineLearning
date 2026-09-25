@@ -83,28 +83,23 @@ by row: rows from one model are near-copies of each other, and a score from a
 random split measures recognition rather than prediction. See
 [docs/user-trained-models-plan.md](docs/user-trained-models-plan.md).
 
-**Training** — the protocol between the Train component and the trainer process:
-`TrainingJob` is the `job.json` a run starts from, and a `Learner` — boosted trees,
-a neural network, a linear model or nearest neighbours, each with the few settings
-a person would expect to set — is the method in it; `TrainerProgress` is one line
-of the `progress.jsonl` it reports through; `TrainerProcess` starts the process and
-polls the file without ever waiting on it, writing wired samples into a folder
-first through `SampleFolder` when they did not come from one; and `TrainerRuntime`
-finds the private Python it runs in, or installs one from a release bundle.
-Nothing here references Grasshopper, so it is tested by running the real trainer
-from xunit. The trainer itself is `python/trainer/`, and `build-bundle.ps1` beside
-it makes the runtime a user installs.
-
 **Inference** — `OtterLogic.MachineLearning.Inference`, a separate project because
 it is the one genuine dependency seam: `Microsoft.ML.OnnxRuntime` has native
 binaries, and a toolkit doing nothing but k-means should not drag them onto a
-test runner. `OnnxModel` opens a model file and answers for rows; `ModelMetadata`
-is what the file says about itself — features in order, target, classes, how it
-scored — carried *inside* the `.onnx` under one `metadata_props` key rather than
-in a sidecar, so a model is one file and cannot arrive incomplete. The graph
-interface is fixed (`features` in; `value`, or `label` and `probabilities`, out),
-which is what lets scikit-learn today and PyTorch later sit behind one reader. See
-[docs/user-trained-models-phase-1.md](docs/user-trained-models-phase-1.md).
+test runner. It is both halves of the ONNX seam. `OnnxModel` opens a model file
+and answers for rows; `ModelMetadata` is what the file says about itself —
+features in order, target, classes, how it scored — carried *inside* the `.onnx`
+under one `metadata_props` key rather than in a sidecar, so a model is one file
+and cannot arrive incomplete. The graph interface is fixed (`features` in;
+`value`, or `label` and `probabilities`, out), which is what lets a model from
+scikit-learn or PyTorch sit behind the same reader as one OtterLogic trained.
+`Export/` is the writing half: `OnnxGraph` builds the handful of operators the
+learners need — an affine chain, a `TreeEnsemble`, a softmax — over a
+`ProtobufWriter` that is the wire format in a few dozen lines, and `OnnxExport`
+writes the file beside its target, runs it back through ONNX Runtime against the
+fitted model's own answers, and renames it into place only when they agree. The
+learners that use it live in Supervised. See
+[docs/in-process-training.md](docs/in-process-training.md).
 
 ## What is deliberately not here
 
@@ -126,12 +121,14 @@ This is the distinction the repo is organised around.
 | Example | Gaussian mixture, PCA | GraphSAGE |
 | Where do the parameters come from? | the data on the wire | gradient descent over a corpus |
 | Is there anything to ship? | **no** | one `.onnx`, carrying its own metadata |
-| Language at runtime | C# only | C# inference, Python training |
+| Language at runtime | C# only | C# inference; training in C# (OtterTrain) or anywhere that writes ONNX |
 | Crosses the ONNX boundary? | **never** | always |
 
 One question decides which you are looking at: *are there numbers that had to be
-learned from data the user does not have?* If yes, it is trained in `/python` and
-shipped as a frozen graph. If no, it is an algorithm and it is written in C#.
+learned from data the caller does not have on the wire?* If yes, it is a trained
+model and it crosses as a frozen graph — whether OtterTrain fitted it in C# a
+minute ago or PyTorch did on another machine. If no, it is an algorithm and it is
+written in C# and runs on every solve.
 
 ## Layout
 
@@ -143,12 +140,11 @@ src/OtterLogic.MachineLearning/
   Distances/        Euclidean distance, the k-nearest search, and the neighbour graph built on it
                     (the dataset contract - schema, sample table, folder on disk, split by
                     group - moved down to the Dataset repo in 2026-09)
-  Training/         the job and progress protocol, the process launcher, runtime discovery
 src/OtterLogic.MachineLearning.Inference/
-                    ONNX Runtime behind OnnxModel and ModelMetadata - the one project with natives
+                    the ONNX seam - OnnxModel and ModelMetadata read a model, Export/ writes one;
+                    the one project with natives
 python/
   fixtures/         scikit-learn reference fixtures for the C# tests, and the inference parity fixtures
-  trainer/          otterlogic_trainer, the process behind Train; ships as a private bundle
 tests/              xunit; runs anywhere, no Rhino needed
 docs/               architecture and design notes
 ```

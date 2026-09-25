@@ -1,17 +1,18 @@
 # Python
 
-Two jobs, and a user of the plug-in installs neither of them by hand.
+Development only. Nothing here ships, and nothing here runs on a user's machine:
+the plug-in trains its models in C#, and it reads models through ONNX Runtime.
 
 - **Reference fixtures** — scikit-learn as a *reference implementation to test
-  the C# against*, never as a dependency. Development only.
-- **The trainer** — `trainer/`, the process behind the Train component. It ships
-  as a private bundle the plug-in fetches on request; nothing here is installed
-  into a Python the user already has, and Predict needs none of it.
+  the C# against*, never as a dependency.
+- **Inference parity fixtures** — models written by tools that are not
+  OtterLogic, which the C# reader must answer for exactly as onnxruntime in
+  Python does. This is the proof that the reader is a reader of ONNX, not of one
+  writer's ONNX.
 
-That second job retired a sentence this file used to open with: it is no longer
-true that nothing Python ever reaches a user's machine. What is still true is
-that nothing Python runs *inside Rhino*, and that a user who only receives models
-and runs them installs nothing beyond OtterLogic.
+There used to be a third job here, the trainer behind OtterTrain, shipped as a
+private Python bundle. It was taken out on 2026-09-25 before it shipped; see
+[docs/in-process-training.md](../docs/in-process-training.md).
 
 ## Setup
 
@@ -19,14 +20,13 @@ and runs them installs nothing beyond OtterLogic.
 py -3.12 -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-pip install -e trainer[test]
 ```
 
 ## Fixtures
 
 ```
 python fixtures/make_fixtures.py             # decomposition: pca_plain.json, pca_whiten.json
-python fixtures/make_inference_fixtures.py   # inference parity: classifier.onnx, regressor.onnx, inference.json
+python fixtures/make_inference_fixtures.py   # classifier.onnx, regressor.onnx, external-mlp.onnx, inference.json
 ```
 
 Commit what they produce. Regenerate only when the fixture data or the comparison
@@ -35,24 +35,14 @@ last rather than against a fixed reference.
 
 The decomposition fixtures are a straight exactness check: PCA is deterministic
 up to a sign, so the C# should match scikit-learn to machine precision once the
-component signs are in a canonical order. The clustering fixtures moved to
-[Unsupervised](https://github.com/Otter-Logic/Unsupervised) with the algorithms.
+component signs are in a canonical order. The clustering fixtures live in
+[Unsupervised](https://github.com/Otter-Logic/Unsupervised) with the algorithms,
+and the supervised ones — trees, boosting, the network — in
+[Supervised](https://github.com/Otter-Logic/Supervised).
 
-The inference fixtures are the contract across the ONNX boundary. The trainer
-trains two small models and records what onnxruntime in Python answers for a few
-probe rows; the C# tests open the same files and must answer the same, to float32
-tolerance. A metadata key renamed on one side only, or an output that changed
-shape, fails here rather than in a user's definition.
-
-## The trainer
-
-See [trainer/README.md](trainer/README.md) for the job and progress protocol,
-the four learners, pointing the plug-in at this checkout with `OTTERLOGIC_TRAINER`,
-and `build-bundle.ps1`, which makes the zip a user's plug-in installs. Its own
-tests run with `pytest trainer`.
-
-Note the asymmetry the whole design rests on: a *learned* model has weights that
-had to be found from data, so it is trained here, out of process, and crosses
-into the plug-in as one `.onnx` file. A Gaussian mixture has no such weights — it
-computes its parameters from whatever is on the wire, every solve — so it is C#,
-and nothing about it comes through this directory.
+The inference fixtures are the contract across the ONNX boundary. Two scikit-learn
+models carry the OtterLogic metadata record and stand in for any writer that does;
+one small network carries none and stands in for a PyTorch export. The C# tests
+open all three and must answer what Python answered, to float32 tolerance. A
+metadata key renamed on one side only, or an output that changed shape, fails here
+rather than in a user's definition.
