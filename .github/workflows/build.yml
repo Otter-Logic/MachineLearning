@@ -70,24 +70,3 @@ jobs:
 
       - name: Test
         run: dotnet test MachineLearning/OtterLogic.slnx -c Release --no-build
-
-  # The trainer has its own tests, in Python. Kept as a separate job so that a
-  # broken wheel on the Python side does not read as a C# failure, and so the
-  # C# job stays free of Python: the C# tests that run the real trainer pass
-  # with a note when no runtime is found, and the inference parity tests use
-  # committed .onnx fixtures.
-  trainer:
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install
-        run: pip install -e "python/trainer[test]"
-
-      - name: Test
-        run: pytest python/trainer -q

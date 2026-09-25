@@ -86,19 +86,6 @@ public sealed class OnnxGraph
         return Constant(name, flat, rows, columns);
     }
 
-    /// <summary>An int64 constant, with the given shape.</summary>
-    public string Constant(string name, IReadOnlyList<long> values, params int[] dims)
-    {
-        RequireCount(values.Count, dims, name);
-        var raw = new byte[values.Count * 8];
-        for (int i = 0; i < values.Count; i++)
-            BinaryPrimitives.WriteInt64LittleEndian(raw.AsSpan(i * 8), values[i]);
-
-        string unique = Unique(name);
-        _initializers.Add(new Tensor(unique, Int64Element, dims, raw));
-        return unique;
-    }
-
     /// <summary>
     /// Adds an operator with one output and returns that output's name.
     /// </summary>

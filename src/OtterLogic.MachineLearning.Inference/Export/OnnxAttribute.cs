@@ -39,8 +39,6 @@ public sealed class OnnxAttribute
 
     public static OnnxAttribute Ints(string name, IEnumerable<long> values) => new(name, IntsType, null, values.ToArray(), null);
 
-    public static OnnxAttribute Ints(string name, IEnumerable<int> values) => Ints(name, values.Select(v => (long)v));
-
     public static OnnxAttribute Floats(string name, IEnumerable<float> values) => new(name, FloatsType, values.ToArray(), null, null);
 
     public static OnnxAttribute Strings(string name, IEnumerable<string> values) => new(name, StringsType, null, null, values.ToArray());

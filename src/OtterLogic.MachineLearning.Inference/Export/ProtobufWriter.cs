@@ -10,9 +10,8 @@ namespace OtterLogic.MachineLearning.Inference.Export;
 /// Hand-written rather than taken from Google.Protobuf for the reason this stack
 /// carries no Accord and no MathNet: a second copy of a widely used assembly at a
 /// different version is an assembly conflict waiting for a user who runs another
-/// plug-in that loads it. The wire format is four cases — varint, fixed 32,
-/// fixed 64, length-delimited — and every ONNX message a model needs is made of
-/// those, so this is a few dozen lines and a table of field numbers, not a
+/// plug-in that loads it. A model needs three of the wire format's cases — varint,
+/// fixed 32, length-delimited — and every ONNX message it holds is made of those, so this is a few dozen lines and a table of field numbers, not a
 /// dependency.
 /// </para>
 /// <para>
@@ -23,7 +22,6 @@ namespace OtterLogic.MachineLearning.Inference.Export;
 internal sealed class ProtobufWriter
 {
     private const int VarintWire = 0;
-    private const int Fixed64Wire = 1;
     private const int LengthDelimitedWire = 2;
     private const int Fixed32Wire = 5;
 
@@ -47,15 +45,6 @@ internal sealed class ProtobufWriter
         _bytes.Write(buffer);
     }
 
-    /// <summary>A double field, eight bytes little-endian.</summary>
-    public void Double(int field, double value)
-    {
-        Tag(field, Fixed64Wire);
-        Span<byte> buffer = stackalloc byte[8];
-        BinaryPrimitives.WriteDoubleLittleEndian(buffer, value);
-        _bytes.Write(buffer);
-    }
-
     /// <summary>A bytes field.</summary>
     public void Bytes(int field, ReadOnlySpan<byte> data)
     {
@@ -72,9 +61,6 @@ internal sealed class ProtobufWriter
 
     /// <summary>The bytes written so far.</summary>
     public byte[] ToArray() => _bytes.ToArray();
-
-    /// <summary>Length in bytes so far.</summary>
-    public long Length => _bytes.Length;
 
     private void Tag(int field, int wireType) => WriteVarint((ulong)((field << 3) | wireType));
 

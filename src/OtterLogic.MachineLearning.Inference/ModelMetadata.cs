@@ -17,9 +17,10 @@ namespace OtterLogic.MachineLearning.Inference;
 /// a file that has to travel with a partner is a file that arrives alone.
 /// </para>
 /// <para>
-/// This record and its Python twin in <c>python/trainer/otterlogic_trainer/metadata.py</c>
-/// are the one thing the two languages have to agree on. The inference parity
-/// fixture is what keeps them agreeing.
+/// OtterLogic writes this record from C# (<see cref="Export.OnnxGraph.ToBytes"/>)
+/// and any other tool may write it too: <c>python/fixtures/make_inference_fixtures.py</c>
+/// writes it from Python, and the inference parity fixtures are what keep the two
+/// sides agreeing on its shape.
 /// </para>
 /// </summary>
 public sealed record ModelMetadata
