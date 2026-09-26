@@ -163,7 +163,7 @@ feature extraction, and it is always a table.
 ```
 Robot / GSA / Karamba / IFC             sources — many, messy, software-specific
         ↓   existing Grasshopper plug-ins; a dedicated reader later
-lines, surfaces, supports, attributes   generic wires — what the Insight Engine already takes
+lines, surfaces, supports, attributes   generic wires — what Section Groups and Describe Member already take
         ↓   feature extraction, C#, in the domain toolkit
 one row per sample                      the dataset — one format, software-agnostic
 ```
@@ -227,7 +227,7 @@ Consequences that shape the design:
 
 | Rank | Use case | Verdict |
 |---|---|---|
-| 1 | Analysis model → per-member attributes: end releases, then section group and member role | Thousands of rows per model, labels free, features already produced by the Insight Engine, every prediction checkable by an engineer. |
+| 1 | Analysis model → per-member attributes: end releases, then section group and member role | Thousands of rows per model, labels free, features already produced by Describe Member, every prediction checkable by an engineer. |
 | 2 | Analysis results → sizing | An early-stage first guess or an optimiser seed, never a substitute for the code check. Predict a required property as a regression and pick from the catalogue with a fixed rule. It will learn the firm's conservatism along with its judgement. |
 | 3 | Fabrication: part or connection family from corrected cluster labels; hours or cost from part features | The same trainer with different columns — the test that the tools really are generic. |
 | 4 | IFC → analysis model | Not end to end: mostly deterministic geometry, paired data is rare, errors are intolerable. The slices that suit learning are per-element classifications — load-bearing, role, release — which is use case 1 with BIM features. |
@@ -271,7 +271,7 @@ changed.
 | MachineLearning | `Data` — table, schema, roles, group, folder IO, later edges. `Inference` — its own project, because of the native binaries. `Training` — the job protocol, the process launcher, runtime discovery and install; no Grasshopper reference. The Python trainer's entry point and protocol. |
 | Supervised | The C# baselines, options records, metrics. The tabular Python trainer modules. |
 | DeepLearning | The graph and self-supervised Python trainer modules, and whatever C# they need to feed `MultiViewClustering`. |
-| StructuralDesign | A generic Member Features table built from the Insight Engine's graph. Users wire their own labels; no engineering rule is baked in. |
+| StructuralDesign | A generic Member Features table built from the engine's reading (Describe Member). Users wire their own labels; no engineering rule is baked in. |
 | Rhino3D | Every component. |
 
 The usual test applies: anything that needs to know what a release is belongs in

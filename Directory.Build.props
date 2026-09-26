@@ -19,7 +19,7 @@
     <ImplicitUsings>true</ImplicitUsings>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
 
-    <Version>0.1.0</Version>
+    <Version>1.0.0</Version>
     <Authors>OtterLogic</Authors>
     <Company>OtterLogic</Company>
 
