@@ -15,8 +15,16 @@
 /// methods do not guarantee. That matters here because the smallest eigenvalues
 /// are exactly the ones the variance threshold has to judge.
 /// </para>
+/// <para>
+/// Public since 2026-09, when the BIM model diff needed the principal axes of a
+/// 3x3 second-moment matrix it had integrated exactly. Principal components over
+/// sample points would have done, but only as well as the sampling: the n-1 in
+/// the covariance alone stretches a length by about 1/2n, three millimetres on a
+/// six-metre beam read at a thousand points, and an untouched beam read at a
+/// different count would have come out modified.
+/// </para>
 /// </summary>
-internal static class SymmetricEigen
+public static class SymmetricEigen
 {
     /// <summary>
     /// Decomposes <paramref name="matrix"/> into eigenvalues and eigenvectors,
@@ -28,7 +36,7 @@ internal static class SymmetricEigen
     /// returned matrix — <c>vectors[row, i]</c> is component <c>row</c> of the
     /// eigenvector for <c>values[i]</c>.
     /// </returns>
-    internal static (double[] Values, double[,] Vectors) Decompose(double[,] matrix)
+    public static (double[] Values, double[,] Vectors) Decompose(double[,] matrix)
     {
         int d = matrix.GetLength(0);
         if (matrix.GetLength(1) != d)
